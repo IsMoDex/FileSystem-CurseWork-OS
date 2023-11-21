@@ -103,23 +103,67 @@ namespace FileSystem_CurseWork_OS
 
         public sealed class BitMapTableInodes
         {
+            private long _StartBytePositionSelectedElement;
+            private FileStream fs;
+            public bool Write
+            {
+                set
+                {
+                    WriteBytesOperation(fs, _StartBytePositionSelectedElement, BitConverter.GetBytes(value), sizeof(bool));
+                }
+                get
+                {
+                    var bytes = ReadBytesOperation(fs, _StartBytePositionSelectedElement, sizeof(bool));
+                    return BitConverter.ToBoolean(bytes);
+                }
+            }
+
+            public BitMapTableInodes(FileStream filestream, int Element)
+            {
+                _StartBytePositionSelectedElement = GetOffset(Element) - 1; // - 1 Особенность в связи с Seek
+                fs = filestream;
+            }
+            public static long CountMaxEntriesInTableInode
+            {
+                get
+                {
+                    long FreeSpace = SuperBlock.SizeFileSystem - SuperBlock.EndByte;
+                    return (long)(FreeSpace * 0.15) / TableInodes.OverallSize;
+                }
+            }
+
+            public static int OverallSize
+            {
+                get
+                {
+                    return sizeof(bool);
+                }
+            }
             public static int StartByte
             {
                 get
                 {
-                    return SuperBlock.StartByte + 1;
+                    return SuperBlock.EndByte + 1;
                 }
             }
             public static long EndByte
             {
                 get
                 {
-                    long FreeSpace = SuperBlock.SizeFileSystem - SuperBlock.EndByte;
+                    //long FreeSpace = SuperBlock.SizeFileSystem - SuperBlock.EndByte;
 
-                    long CountMaxEntriesInTableInode = (long)(FreeSpace * 0.15) / TableInodes.OverallSize;
+                    //long CountMaxEntriesInTableInode = (long)(FreeSpace * 0.15) / TableInodes.OverallSize;
 
                     return SuperBlock.EndByte + CountMaxEntriesInTableInode;
                 }
+            }
+
+            public static long GetOffset(long Element)
+            {
+                if (CountMaxEntriesInTableInode < Element || Element < 0)
+                    throw new IndexOutOfRangeException("Элемента под заданными номером не существует, вы вышли за пределы блока.");
+
+                return StartByte + (Element * OverallSize);
             }
 
             //public static long StartByte
@@ -134,26 +178,122 @@ namespace FileSystem_CurseWork_OS
 
         public sealed class TableInodes : DataBlockFS
         {
-            public const byte NameFileSize = 50;
-            public const byte FileExtensionSize = 5;
-            public const byte FileSize = 5;
-            public const byte FileAtributesSize = 3;
-            public const byte FileAcessSize = 6;
-            public const byte IDUserSize = 2;
-            public const byte NumberStartClasterSize = 4;
+            private long _StartBytePositionSelectedElement;
+            private FileStream fs;
+
+            private const byte NameFileSize = 50;  //Для UTF8
+            private const byte FileExtensionSize = 5;
+            private const byte FileLenghtSize = sizeof(UInt64);
+            private const byte FileAcessSize = 6;
+            private const byte IDUserSize = sizeof(UInt16);
+            private const byte NumberStartClasterSize = sizeof(int);
+            private static long CountMaxEntriesInTableInode 
+            { 
+                get
+                {
+                    return BitMapTableInodes.CountMaxEntriesInTableInode;
+                }
+            }
+
+            public string NameFile
+            {
+                set
+                {
+                    WriteBytesOperation(fs, _StartBytePositionSelectedElement, Encoding.UTF8.GetBytes(value), NameFileSize);
+                }
+                get
+                {
+                    var bytes = ReadBytesOperation(fs, _StartBytePositionSelectedElement, NameFileSize);
+                    return Encoding.UTF8.GetString(bytes);
+                }
+            }           //50
+            public string FileExtension
+            {
+                set
+                {
+                    WriteBytesOperation(fs, _StartBytePositionSelectedElement + NameFileSize, Encoding.UTF8.GetBytes(value), FileExtensionSize);
+                }
+                get
+                {
+                    var bytes = ReadBytesOperation(fs, _StartBytePositionSelectedElement + NameFileSize, FileExtensionSize);
+                    return Encoding.UTF8.GetString(bytes);
+                }
+            }      //5
+            public UInt64 FileLenght
+            {
+                set
+                {
+                    WriteBytesOperation(fs,_StartBytePositionSelectedElement + NameFileSize + FileExtensionSize, BitConverter.GetBytes(value), FileLenghtSize);
+                }
+                get
+                {
+                    var bytes = ReadBytesOperation(fs, _StartBytePositionSelectedElement + NameFileSize + FileExtensionSize, FileLenghtSize);
+                    return BitConverter.ToUInt64(bytes);
+                }
+            }         //8
+            public string FileAcess
+            {
+                set
+                {
+                    WriteBytesOperation(fs, _StartBytePositionSelectedElement + NameFileSize + FileExtensionSize + FileLenghtSize, Encoding.UTF8.GetBytes(value), FileAcessSize);
+                }
+                get
+                {
+                    var bytes = ReadBytesOperation(fs, _StartBytePositionSelectedElement + NameFileSize + FileExtensionSize + FileLenghtSize, FileAcessSize);
+                    return Encoding.UTF8.GetString(bytes);
+                }
+            }          //6
+            public UInt16 IDUser
+            {
+                set
+                {
+                    WriteBytesOperation(fs, _StartBytePositionSelectedElement + NameFileSize + FileExtensionSize + FileLenghtSize + FileAcessSize, BitConverter.GetBytes(value), IDUserSize);
+                }
+                get
+                {
+                    var bytes = ReadBytesOperation(fs, _StartBytePositionSelectedElement + NameFileSize + FileExtensionSize + FileLenghtSize + FileAcessSize, IDUserSize);
+                    return BitConverter.ToUInt16(bytes);
+                }
+            }             //2
+            public int NumberStartClaster
+            {
+                set
+                {
+                    WriteBytesOperation(fs, _StartBytePositionSelectedElement + NameFileSize + FileExtensionSize + FileLenghtSize + FileAcessSize + IDUserSize, BitConverter.GetBytes(value), NumberStartClasterSize);
+                }
+                get
+                {
+                    var bytes = ReadBytesOperation(fs, _StartBytePositionSelectedElement + NameFileSize + FileExtensionSize + FileLenghtSize + FileAcessSize + IDUserSize, NumberStartClasterSize);
+                    return BitConverter.ToInt32(bytes);
+                }
+            }    //4
+                                                //75
+
+            public TableInodes(FileStream filestream, int Element)
+            {
+                _StartBytePositionSelectedElement = GetOffset(Element) - 1; // - 1 Особенность в связи с Seek
+                fs = filestream;
+            }
 
             public static int OverallSize
             {
                 get
                 {
                     byte OverallSize = 0;
-                    OverallSize += TableInodes.NameFileSize;
-                    OverallSize += TableInodes.FileExtensionSize;
-                    OverallSize += TableInodes.FileSize;
-                    OverallSize += TableInodes.FileAtributesSize;
-                    OverallSize += TableInodes.FileAcessSize;
-                    OverallSize += TableInodes.IDUserSize;
-                    OverallSize += TableInodes.NumberStartClasterSize;
+
+                    //OverallSize += 50;  //Для UTF8
+                    //OverallSize += 5;
+                    //OverallSize += sizeof(UInt64);
+                    //OverallSize += 6;
+                    //OverallSize += sizeof(UInt16);
+                    //OverallSize += sizeof(int);
+
+                    OverallSize += NameFileSize;
+                    OverallSize += FileExtensionSize;
+                    OverallSize += FileLenghtSize;
+                    OverallSize += FileAcessSize;
+                    OverallSize += IDUserSize;
+                    OverallSize += NumberStartClasterSize;
 
                     return OverallSize;
                 }
@@ -171,14 +311,49 @@ namespace FileSystem_CurseWork_OS
                 {
                     long LastPosBitMapInodes = BitMapTableInodes.EndByte;
 
-                    long CountMaxEntries = LastPosBitMapInodes - SuperBlock.EndByte;
+                    //long CountMaxEntries = LastPosBitMapInodes - SuperBlock.EndByte;
 
-                    long SizeAllEntries = CountMaxEntries * OverallSize;
+                    long SizeAllEntries = CountMaxEntriesInTableInode * OverallSize;
 
                     return SizeAllEntries + LastPosBitMapInodes;
-                }
+                }   
             }
 
+            public static long GetOffset(long Element)
+            {
+                if (CountMaxEntriesInTableInode < Element || Element < 0)
+                    throw new IndexOutOfRangeException("Элемента под заданными номером не существует, вы вышли за пределы блока.");
+
+                return StartByte + (Element * OverallSize);
+            }
+
+            public void CreateWrite()
+            {
+
+            }
+
+            public void DeleteWrite()
+            {
+
+            }
+
+            //private void WriteBytesOperation(int OffSet, byte[] value, byte MaxSize)
+            //{
+            //    fs.Seek(_StartBytePositionSelectedElement + OffSet, SeekOrigin.Begin);
+
+            //    var insertData = new byte[MaxSize];
+
+            //    value.CopyTo(insertData, 0);
+
+            //    fs.Write(insertData, 0, insertData.Length);
+            //}
+
+            //private byte[] ReadBytesOperation(int OffSet, byte Count)
+            //{
+            //    fs.Seek(_StartBytePositionSelectedElement + OffSet, SeekOrigin.Begin);
+
+            //    return ReadBytes(fs, Count);
+            //}
         }
 
         public sealed class BitMapDataClasters : DataBlockFS
@@ -187,7 +362,7 @@ namespace FileSystem_CurseWork_OS
             {
                 get
                 {
-                    return sizeof(bool);
+                    return 1;
                 }
             }
             public static long StartByte
@@ -208,6 +383,13 @@ namespace FileSystem_CurseWork_OS
 
                     return LastPosTableInodes + CountCurrentElements;
                 }
+            }
+            public static long GetOffset(long Element)
+            {
+                if (EndByte < Element || Element < 0)
+                    throw new IndexOutOfRangeException("Элемента под заданными номером не существует, вы вышли за пределы блока.");
+
+                return StartByte + (Element * OverallSize);
             }
         }
 
@@ -238,6 +420,13 @@ namespace FileSystem_CurseWork_OS
                     return LastPosBitMapDataClasters + CountSectors * SuperBlock.SizeSector;
                 }
             }
+            public static long GetOffset(long Element)
+            {
+                if (EndByte < Element || Element < 0)
+                    throw new IndexOutOfRangeException("Элемента под заданными номером не существует, вы вышли за пределы блока.");
+
+                return StartByte + (Element * OverallSize);
+            }
         }
 
         private static byte ReadByte(FileStream fs)
@@ -252,6 +441,24 @@ namespace FileSystem_CurseWork_OS
             byte[] buffer = new byte[Count];
             fs.Read(buffer, 0, Count);
             return buffer;
+        }
+
+        private static void WriteBytesOperation(FileStream fs, long OffSet, byte[] value, byte MaxSize)
+        {
+            fs.Seek(OffSet, SeekOrigin.Begin);
+
+            var insertData = new byte[MaxSize];
+
+            value.CopyTo(insertData, 0);
+
+            fs.Write(insertData, 0, insertData.Length);
+        }
+
+        private static byte[] ReadBytesOperation(FileStream fs, long OffSet, byte Count)
+        {
+            fs.Seek(OffSet, SeekOrigin.Begin);
+
+            return ReadBytes(fs, Count);
         }
     }
 }

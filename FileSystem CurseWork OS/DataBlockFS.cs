@@ -15,7 +15,7 @@ namespace FileSystem_CurseWork_OS
 
         public static long GetOffset(long Element)
         {
-            if (EndByte < Element)
+            if (EndByte < Element || Element < 0)
                 throw new IndexOutOfRangeException("Элемента под заданными номером не существует, вы вышли за пределы блока.");
 
             return StartByte + (Element * OverallSize);

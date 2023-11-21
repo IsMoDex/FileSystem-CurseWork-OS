@@ -112,6 +112,45 @@ namespace FileSystem_CurseWork_OS
                     fs.Write(bytes, 0, bytes.Length);
 
                     Console.WriteLine(Encoding.UTF8.GetString(bytes, 0, bytes.Length));
+
+
+
+                    var table = new DataOperatorFS.TableInodes(fs, 0);
+                    var map = new DataOperatorFS.BitMapTableInodes(fs, 1);
+
+                    map.Write = true;
+
+                    Console.WriteLine(map.Write);
+
+                    table.NameFile = "Hello Wrold";
+                    table.FileExtension = "rtx";
+                    table.FileLenght = 123;
+                    table.FileAcess = "rwxrwx";
+                    table.IDUser = 1;
+                    table.NumberStartClaster = 1;
+
+                    Console.WriteLine(table.NameFile);
+                    Console.WriteLine(table.FileExtension);
+                    Console.WriteLine(table.FileLenght);
+                    Console.WriteLine(table.FileAcess);
+                    Console.WriteLine(table.IDUser);
+                    Console.WriteLine(table.NumberStartClaster);
+
+                    table = new DataOperatorFS.TableInodes(fs, 1);
+
+                    table.NameFile = "ASD";
+                    table.FileExtension = "rtx";
+                    table.FileLenght = 555;
+                    table.FileAcess = "rwxrwx";
+                    table.IDUser = 2;
+                    table.NumberStartClaster = 2;
+
+                    Console.WriteLine(table.NameFile);
+                    Console.WriteLine(table.FileExtension);
+                    Console.WriteLine(table.FileLenght);
+                    Console.WriteLine(table.FileAcess);
+                    Console.WriteLine(table.IDUser);
+                    Console.WriteLine(table.NumberStartClaster);
                 }
                 
                 
