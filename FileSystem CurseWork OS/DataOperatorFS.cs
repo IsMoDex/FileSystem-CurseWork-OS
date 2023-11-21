@@ -326,34 +326,6 @@ namespace FileSystem_CurseWork_OS
 
                 return StartByte + (Element * OverallSize);
             }
-
-            public void CreateWrite()
-            {
-
-            }
-
-            public void DeleteWrite()
-            {
-
-            }
-
-            //private void WriteBytesOperation(int OffSet, byte[] value, byte MaxSize)
-            //{
-            //    fs.Seek(_StartBytePositionSelectedElement + OffSet, SeekOrigin.Begin);
-
-            //    var insertData = new byte[MaxSize];
-
-            //    value.CopyTo(insertData, 0);
-
-            //    fs.Write(insertData, 0, insertData.Length);
-            //}
-
-            //private byte[] ReadBytesOperation(int OffSet, byte Count)
-            //{
-            //    fs.Seek(_StartBytePositionSelectedElement + OffSet, SeekOrigin.Begin);
-
-            //    return ReadBytes(fs, Count);
-            //}
         }
 
         public sealed class BitMapDataClasters : DataBlockFS
