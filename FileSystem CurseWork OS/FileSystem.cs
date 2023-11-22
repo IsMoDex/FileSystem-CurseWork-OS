@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FileSystem_CurseWork_OS.Blocks;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,7 +24,7 @@ namespace FileSystem_CurseWork_OS
 
                 using (FileStream fs = new FileStream(_path, FileMode.Open))
                 {
-                    //int pos = DataOperatorFS.SuperBlock.EndByte;
+                    //int pos = SuperBlock.EndByte;
 
                     //fs.Seek(pos - 1, SeekOrigin.Begin);
 
@@ -35,7 +36,7 @@ namespace FileSystem_CurseWork_OS
 
 
 
-                    fs.Seek(DataOperatorFS.BitMapTableInodes.StartByte - 1, SeekOrigin.Begin);
+                    fs.Seek(BitMapTableInodes.StartByte - 1, SeekOrigin.Begin);
 
                     bytes = Encoding.UTF8.GetBytes("B");
 
@@ -45,7 +46,7 @@ namespace FileSystem_CurseWork_OS
 
 
 
-                    fs.Seek(DataOperatorFS.BitMapTableInodes.EndByte - 1, SeekOrigin.Begin);
+                    fs.Seek(BitMapTableInodes.EndByte - 1, SeekOrigin.Begin);
 
                     bytes = Encoding.UTF8.GetBytes("C");
 
@@ -55,7 +56,7 @@ namespace FileSystem_CurseWork_OS
 
 
 
-                    fs.Seek(DataOperatorFS.TableInodes.StartByte - 1, SeekOrigin.Begin);
+                    fs.Seek(TableInodes.StartByte - 1, SeekOrigin.Begin);
 
                     bytes = Encoding.UTF8.GetBytes("D");
 
@@ -65,7 +66,7 @@ namespace FileSystem_CurseWork_OS
 
 
 
-                    fs.Seek(DataOperatorFS.TableInodes.EndByte - 1, SeekOrigin.Begin);
+                    fs.Seek(TableInodes.EndByte - 1, SeekOrigin.Begin);
 
                     bytes = Encoding.UTF8.GetBytes("E");
 
@@ -75,7 +76,7 @@ namespace FileSystem_CurseWork_OS
 
 
 
-                    fs.Seek(DataOperatorFS.BitMapDataClasters.StartByte - 1, SeekOrigin.Begin);
+                    fs.Seek(BitMapDataClasters.StartByte - 1, SeekOrigin.Begin);
 
                     bytes = Encoding.UTF8.GetBytes("F");
 
@@ -85,7 +86,7 @@ namespace FileSystem_CurseWork_OS
 
 
 
-                    fs.Seek(DataOperatorFS.BitMapDataClasters.EndByte - 1, SeekOrigin.Begin);
+                    fs.Seek(BitMapDataClasters.EndByte - 1, SeekOrigin.Begin);
 
                     bytes = Encoding.UTF8.GetBytes("G");
 
@@ -95,7 +96,7 @@ namespace FileSystem_CurseWork_OS
 
 
 
-                    fs.Seek(DataOperatorFS.DataClasters.StartByte - 1, SeekOrigin.Begin);
+                    fs.Seek(DataClasters.StartByte - 1, SeekOrigin.Begin);
 
                     bytes = Encoding.UTF8.GetBytes("Q");
 
@@ -105,7 +106,7 @@ namespace FileSystem_CurseWork_OS
 
 
 
-                    fs.Seek(DataOperatorFS.DataClasters.EndByte - 1, SeekOrigin.Begin);
+                    fs.Seek(DataClasters.EndByte - 1, SeekOrigin.Begin);
 
                     bytes = Encoding.UTF8.GetBytes("R");
 
@@ -115,8 +116,8 @@ namespace FileSystem_CurseWork_OS
 
 
 
-                    var table = new DataOperatorFS.TableInodes(fs, 0);
-                    var map = new DataOperatorFS.BitMapTableInodes(fs, 1);
+                    var table = new TableInodes(fs, 0);
+                    var map = new BitMapTableInodes(fs, 1);
 
                     map.Write = true;
 
@@ -136,7 +137,7 @@ namespace FileSystem_CurseWork_OS
                     Console.WriteLine(table.IDUser);
                     Console.WriteLine(table.NumberStartClaster);
 
-                    table = new DataOperatorFS.TableInodes(fs, 1);
+                    table = new TableInodes(fs, 1);
 
                     table.NameFile = "ASD";
                     table.FileExtension = "rtx";
@@ -152,10 +153,10 @@ namespace FileSystem_CurseWork_OS
                     Console.WriteLine(table.IDUser);
                     Console.WriteLine(table.NumberStartClaster);
 
-                    var bitclaster = new DataOperatorFS.BitMapDataClasters(fs, table.NumberStartClaster);
+                    var bitclaster = new BitMapDataClasters(fs, table.NumberStartClaster);
                     bitclaster.Write = true;
 
-                    var claster = new DataOperatorFS.DataClasters(fs, table.NumberStartClaster);
+                    var claster = new DataClasters(fs, table.NumberStartClaster);
 
                     claster.NumberNextBlock = 2;
                     claster.DataSector = "Data, New Data, Neaxt Data and td\nHello World///";
@@ -163,10 +164,10 @@ namespace FileSystem_CurseWork_OS
                     Console.WriteLine(claster.NumberNextBlock);
                     Console.WriteLine(claster.DataSector);
 
-                    bitclaster = new DataOperatorFS.BitMapDataClasters(fs, claster.NumberNextBlock);
+                    bitclaster = new BitMapDataClasters(fs, claster.NumberNextBlock);
                     bitclaster.Write = true;
 
-                    claster = new DataOperatorFS.DataClasters(fs, claster.NumberNextBlock);
+                    claster = new DataClasters(fs, claster.NumberNextBlock);
 
                     claster.NumberNextBlock = 0;
                     claster.DataSector = "LastData, EndData\nPrint;";
@@ -181,7 +182,7 @@ namespace FileSystem_CurseWork_OS
             {
                 using (FileStream fs = new FileStream(_path, FileMode.Create))
                 {
-                    for(long i = 0; i < DataOperatorFS.SuperBlock.CountSectors * DataOperatorFS.SuperBlock.SizeSector; ++i)
+                    for(long i = 0; i < SuperBlock.CountSectors * SuperBlock.SizeSector; ++i)
                     {
                         fs.WriteByte(0);
                     }

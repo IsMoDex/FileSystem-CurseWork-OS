@@ -87,18 +87,18 @@ namespace FileSystem_CurseWork_OS
         {
             fs.Seek(0, SeekOrigin.Begin);
 
-            fs.Write(Encoding.UTF8.GetBytes(SuperBlock.NameFileSystem));        //Название файловой системы
-            fs.Write(BitConverter.GetBytes(SuperBlock.SizeSector), 0, 1);       //Размер сектора
-            fs.Write(BitConverter.GetBytes(SuperBlock.CountSectors));         //Количество секторов
-            //fs.Write(BitConverter.GetBytes(SuperBlock.SizeRootDirectory));      //Размер корневого каталога
+            fs.Write(Encoding.UTF8.GetBytes(Blocks.SuperBlock.NameFileSystem));        //Название файловой системы
+            fs.Write(BitConverter.GetBytes(Blocks.SuperBlock.SizeSector), 0, 1);       //Размер сектора
+            fs.Write(BitConverter.GetBytes(Blocks.SuperBlock.CountSectors));         //Количество секторов
+            //fs.Write(BitConverter.GetBytes(Blocks.SuperBlock.SizeRootDirectory));      //Размер корневого каталога
         }
 
         public static void ReadSuperBlock(FileStream fs)
         {
-            fs.Seek(Encoding.UTF8.GetByteCount(SuperBlock.NameFileSystem), SeekOrigin.Begin);
-            SuperBlock.SizeSector = ReadByte(fs);
-            SuperBlock.CountSectors = BitConverter.ToInt64(ReadBytes(fs, sizeof(Int64)));
-            //SuperBlock.SizeRootDirectory = BitConverter.ToInt64(ReadBytes(fs, sizeof(Int64)));
+            fs.Seek(Encoding.UTF8.GetByteCount(Blocks.SuperBlock.NameFileSystem), SeekOrigin.Begin);
+            Blocks.SuperBlock.SizeSector = ReadByte(fs);
+            Blocks.SuperBlock.CountSectors = BitConverter.ToInt64(ReadBytes(fs, sizeof(Int64)));
+            //Blocks.SuperBlock.SizeRootDirectory = BitConverter.ToInt64(ReadBytes(fs, sizeof(Int64)));
         }
 
         public sealed class BitMapTableInodes
