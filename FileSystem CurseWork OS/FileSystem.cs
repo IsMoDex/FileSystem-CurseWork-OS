@@ -143,7 +143,7 @@ namespace FileSystem_CurseWork_OS
                     table.FileLenght = 555;
                     table.FileAcess = "rwxrwx";
                     table.IDUser = 2;
-                    table.NumberStartClaster = 2;
+                    table.NumberStartClaster = 1;
 
                     Console.WriteLine(table.NameFile);
                     Console.WriteLine(table.FileExtension);
@@ -151,6 +151,28 @@ namespace FileSystem_CurseWork_OS
                     Console.WriteLine(table.FileAcess);
                     Console.WriteLine(table.IDUser);
                     Console.WriteLine(table.NumberStartClaster);
+
+                    var bitclaster = new DataOperatorFS.BitMapDataClasters(fs, table.NumberStartClaster);
+                    bitclaster.Write = true;
+
+                    var claster = new DataOperatorFS.DataClasters(fs, table.NumberStartClaster);
+
+                    claster.NumberNextBlock = 2;
+                    claster.DataSector = "Data, New Data, Neaxt Data and td\nHello World///";
+
+                    Console.WriteLine(claster.NumberNextBlock);
+                    Console.WriteLine(claster.DataSector);
+
+                    bitclaster = new DataOperatorFS.BitMapDataClasters(fs, claster.NumberNextBlock);
+                    bitclaster.Write = true;
+
+                    claster = new DataOperatorFS.DataClasters(fs, claster.NumberNextBlock);
+
+                    claster.NumberNextBlock = 0;
+                    claster.DataSector = "LastData, EndData\nPrint;";
+
+                    Console.WriteLine(claster.NumberNextBlock);
+                    Console.WriteLine(claster.DataSector);
                 }
                 
                 

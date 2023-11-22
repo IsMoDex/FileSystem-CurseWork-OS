@@ -330,6 +330,40 @@ namespace FileSystem_CurseWork_OS
 
         public sealed class BitMapDataClasters : DataBlockFS
         {
+            private long _StartBytePositionSelectedElement;
+            private FileStream fs;
+
+            public bool Write
+            {
+                set
+                {
+                    WriteBytesOperation(fs, _StartBytePositionSelectedElement, BitConverter.GetBytes(value), sizeof(bool));
+                }
+                get
+                {
+                    var bytes = ReadBytesOperation(fs, _StartBytePositionSelectedElement, sizeof(bool));
+                    return BitConverter.ToBoolean(bytes);
+                }
+            }
+
+            public BitMapDataClasters(FileStream fileStream, int Element)
+            {
+                _StartBytePositionSelectedElement = GetOffset(Element) - 1; // - 1 Особенность в связи с Seek
+                fs = fileStream;
+            }
+            static public long CountSectors
+            {
+                get
+                {
+                    long LastPosTableInodes = TableInodes.EndByte;
+
+                    long FreeSpace = SuperBlock.SizeFileSystem - LastPosTableInodes;
+
+                    long CountCurrentElements = FreeSpace / (SuperBlock.SizeSector + 1); //Element = one byte
+
+                    return CountCurrentElements;
+                }
+            }
             static public int OverallSize
             {
                 get
@@ -349,16 +383,16 @@ namespace FileSystem_CurseWork_OS
                 get
                 {
                     long LastPosTableInodes = TableInodes.EndByte;
-                    long FreeSpace = SuperBlock.SizeFileSystem - LastPosTableInodes;
+                    //long FreeSpace = SuperBlock.SizeFileSystem - LastPosTableInodes;
 
-                    long CountCurrentElements = FreeSpace / (SuperBlock.SizeSector + 1); //Element = one byte
+                    //long CountSectors = FreeSpace / (SuperBlock.SizeSector + 1); //Element = one byte
 
-                    return LastPosTableInodes + CountCurrentElements;
+                    return LastPosTableInodes + CountSectors;
                 }
             }
             public static long GetOffset(long Element)
             {
-                if (EndByte < Element || Element < 0)
+                if (CountSectors < Element || Element < 0)
                     throw new IndexOutOfRangeException("Элемента под заданными номером не существует, вы вышли за пределы блока.");
 
                 return StartByte + (Element * OverallSize);
@@ -367,6 +401,57 @@ namespace FileSystem_CurseWork_OS
 
         public sealed class DataClasters : DataBlockFS
         {
+            private long _StartBytePositionSelectedElement;
+            private FileStream fs;
+
+            private static byte DataSectorSize = (byte)(SizeSector - NumberNextBlockSize);
+            private const byte NumberNextBlockSize = sizeof(int);
+
+            public static long CountSectors
+            {
+                get
+                {
+                    return BitMapDataClasters.CountSectors;
+                }
+            }
+            private static byte SizeSector
+            {
+                get
+                {
+                    return SuperBlock.SizeSector;
+                }
+            }
+            public string DataSector
+            {
+                set
+                {
+                    WriteBytesOperation(fs, _StartBytePositionSelectedElement, Encoding.UTF8.GetBytes(value), DataSectorSize);
+                }
+                get
+                {
+                    var bytes = ReadBytesOperation(fs, _StartBytePositionSelectedElement, DataSectorSize);
+                    return Encoding.UTF8.GetString(bytes);
+                }
+            }
+            public int NumberNextBlock
+            {
+                set
+                {
+                    WriteBytesOperation(fs, _StartBytePositionSelectedElement + DataSectorSize, BitConverter.GetBytes(value), NumberNextBlockSize);
+                }
+                get
+                {
+                    var bytes = ReadBytesOperation(fs, _StartBytePositionSelectedElement + DataSectorSize, NumberNextBlockSize);
+                    return BitConverter.ToInt32(bytes);
+                }
+            }
+
+            public DataClasters(FileStream fileStream, int Element)
+            {
+                _StartBytePositionSelectedElement = GetOffset(Element) - 1; // - 1 Особенность в связи с Seek
+                fs = fileStream;
+            }
+
             static public int OverallSize
             {
                 get
@@ -387,7 +472,7 @@ namespace FileSystem_CurseWork_OS
                 {
                     long LastPosBitMapDataClasters = BitMapDataClasters.EndByte;
 
-                    long CountSectors = LastPosBitMapDataClasters - TableInodes.EndByte;
+                    //long CountSectors = LastPosBitMapDataClasters - TableInodes.EndByte;
 
                     return LastPosBitMapDataClasters + CountSectors * SuperBlock.SizeSector;
                 }
