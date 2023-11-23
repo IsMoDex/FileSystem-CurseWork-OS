@@ -8,7 +8,7 @@ namespace FileSystem_CurseWork_OS.Blocks
 {
     internal class SuperBlock : BlockBody
     {
-        public static string NameFileSystem = "TryFS";      //Название файловой системы
+        public const string NameFileSystem = "TryFS";      //Название файловой системы
         public static byte SizeSector = byte.MaxValue;      //Размер сектора
         public static Int64 CountSectors = 1000;            //Количество секторов
 

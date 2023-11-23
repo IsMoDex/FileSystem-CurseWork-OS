@@ -11,7 +11,7 @@ namespace FileSystem_CurseWork_OS.Blocks
         protected long _StartBytePositionSelectedElement;
         protected FileStream fs;
 
-        public BlockBody(FileStream fileStream, int Element, long _CountElements, int _OverallSize, long _StartByte, long _EndByte)
+        public BlockBody(FileStream fileStream, int Element, int _CountElements, int _OverallSize, long _StartByte, long _EndByte)
         {
             CountElements = _CountElements;
             OverallSize = _OverallSize;
@@ -22,7 +22,7 @@ namespace FileSystem_CurseWork_OS.Blocks
             fs = fileStream;
         }
 
-        static public long CountElements;
+        static public int CountElements;
 
         static public int OverallSize;
 

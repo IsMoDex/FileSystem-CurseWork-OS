@@ -15,7 +15,7 @@ namespace FileSystem_CurseWork_OS.Blocks
         private static byte DataSectorSize = (byte)(SizeSector - NumberNextBlockSize);
         private const byte NumberNextBlockSize = sizeof(int);
 
-        public static long CountElements
+        public static int CountElements
         {
             get
             {

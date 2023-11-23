@@ -25,7 +25,7 @@ namespace FileSystem_CurseWork_OS.Blocks
             }
         }
 
-        static public long CountElements
+        static public int CountElements
         {
             get
             {
@@ -35,7 +35,7 @@ namespace FileSystem_CurseWork_OS.Blocks
 
                 long CountCurrentElements = FreeSpace / (SuperBlock.SizeSector + 1); //Element = one byte
 
-                return CountCurrentElements;
+                return (int)CountCurrentElements;
             }
         }
         static public int OverallSize

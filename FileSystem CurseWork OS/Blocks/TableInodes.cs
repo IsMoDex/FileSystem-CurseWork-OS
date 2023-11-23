@@ -19,7 +19,7 @@ namespace FileSystem_CurseWork_OS.Blocks
         private const byte IDUserSize = sizeof(UInt16);
         private const byte NumberStartClasterSize = sizeof(int);
 
-        private static long CountElements
+        private static int CountElements
         {
             get
             {
