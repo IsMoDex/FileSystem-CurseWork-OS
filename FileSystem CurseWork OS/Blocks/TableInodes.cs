@@ -12,14 +12,14 @@ namespace FileSystem_CurseWork_OS.Blocks
         {
         }
 
-        private const byte NameFileSize = 50;  //Для UTF8
-        private const byte FileExtensionSize = 5;
-        private const byte FileLenghtSize = sizeof(UInt64);
-        private const byte FileAcessSize = 6;
-        private const byte IDUserSize = sizeof(UInt16);
-        private const byte NumberStartClasterSize = sizeof(int);
+        public const byte NameFileSize = 50;  //Для UTF8
+        public const byte FileExtensionSize = 5;
+        public const byte FileLenghtSize = sizeof(UInt32);
+        public const byte FileAcessSize = 6;
+        public const byte IDUserSize = sizeof(UInt16);
+        public const byte NumberStartClasterSize = sizeof(int);
 
-        private static int CountElements
+        public static int CountElements
         {
             get
             {
@@ -51,7 +51,7 @@ namespace FileSystem_CurseWork_OS.Blocks
                 return Encoding.UTF8.GetString(bytes);
             }
         }      //5
-        public UInt64 FileLenght
+        public UInt32 FileLenght
         {
             set
             {
@@ -60,7 +60,7 @@ namespace FileSystem_CurseWork_OS.Blocks
             get
             {
                 var bytes = ReadBytesOperation(fs, _StartBytePositionSelectedElement + NameFileSize + FileExtensionSize, FileLenghtSize);
-                return BitConverter.ToUInt64(bytes);
+                return BitConverter.ToUInt32(bytes);
             }
         }         //8
         public string FileAcess

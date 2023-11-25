@@ -60,5 +60,14 @@ namespace FileSystem_CurseWork_OS.Blocks
                 return LastPosTableInodes + CountElements;
             }
         }
+        public static bool[] GetSectorArray(FileStream fs)
+        {
+            var data = new byte[CountElements];
+
+            fs.Seek(StartByte - 1, SeekOrigin.Begin);
+            fs.Read(data, 0, CountElements * OverallSize);
+
+            return data.Select(x => BitConverter.ToBoolean(new byte[] { x })).ToArray();
+        }
     }
 }

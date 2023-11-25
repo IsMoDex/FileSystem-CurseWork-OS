@@ -8,9 +8,13 @@ namespace FileSystem_CurseWork_OS.Blocks
 {
     internal class SuperBlock : BlockBody
     {
+        public const byte NameFileSystemSize = 5;
+        public const byte SizeSectorSize = sizeof(Int32);
+        public const byte CountSectorsSize = sizeof(Int32);
+
         public const string NameFileSystem = "TryFS";      //Название файловой системы
-        public static byte SizeSector = byte.MaxValue;      //Размер сектора
-        public static Int64 CountSectors = 1000;            //Количество секторов
+        public static Int32 SizeSector = byte.MaxValue;      //Размер сектора
+        public static Int32 CountSectors = 1000;            //Количество секторов
 
         public SuperBlock(FileStream fileStream, int Element) : base(fileStream, Element, CountElements, OverallSize, StartByte, EndByte)
         {
@@ -29,7 +33,12 @@ namespace FileSystem_CurseWork_OS.Blocks
         {
             get
             {
-                return Encoding.UTF8.GetByteCount(NameFileSystem) + sizeof(byte) + sizeof(Int64);
+                int OverallSize = 0;
+                OverallSize += NameFileSystemSize;
+                OverallSize += SizeSectorSize;
+                OverallSize += CountSectorsSize;
+
+                return OverallSize;
             }
         }
         public static int StartByte

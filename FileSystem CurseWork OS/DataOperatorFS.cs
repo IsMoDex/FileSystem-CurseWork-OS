@@ -26,7 +26,7 @@ namespace FileSystem_CurseWork_OS
 
             fs.Read(bytes, 0, bytes.Length);
 
-            Blocks.SuperBlock.CountSectors = BitConverter.ToInt64(bytes);
+            Blocks.SuperBlock.CountSectors = BitConverter.ToInt32(bytes);
         }
     }
 }

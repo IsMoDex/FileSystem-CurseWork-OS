@@ -22,13 +22,13 @@ namespace FileSystem_CurseWork_OS.Blocks
             fs = fileStream;
         }
 
-        static public int CountElements;
+        static private int CountElements;
 
-        static public int OverallSize;
+        static private int OverallSize;
 
-        public static long StartByte;
+        static private long StartByte;
 
-        public static long EndByte;
+        static private long EndByte;
 
         public static long GetOffset(long Element)
         {

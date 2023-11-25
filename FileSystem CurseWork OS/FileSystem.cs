@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,18 +26,20 @@ namespace FileSystem_CurseWork_OS
                     //DataOperatorFS.ReadSuperBlock(fs);
 
                     //Считываем данные суперблока
-                    fs.Seek(Encoding.UTF8.GetByteCount(SuperBlock.NameFileSystem), SeekOrigin.Begin);
+                    fs.Seek(SuperBlock.NameFileSystemSize, SeekOrigin.Begin);
 
-                    var bytes = new byte[sizeof(Int64)];
-
-                    fs.Read(bytes, 0, 1);
-
-                    SuperBlock.SizeSector = bytes[0];
+                    var bytes = new byte[sizeof(Int32)];
 
                     fs.Read(bytes, 0, bytes.Length);
 
-                    SuperBlock.CountSectors = BitConverter.ToInt64(bytes);
+                    SuperBlock.SizeSector = BitConverter.ToInt32(bytes);
+
+                    fs.Read(bytes, 0, bytes.Length);
+
+                    SuperBlock.CountSectors = BitConverter.ToInt32(bytes);
                 }
+
+                CreateNewFile("NewFile", "txt", "rwxrwx", 0, "Text\nRandomText");
 
                 //TestFS();
                 
@@ -58,14 +61,19 @@ namespace FileSystem_CurseWork_OS
                     //Записываем SuperBlock
                     fs.Seek(0, SeekOrigin.Begin);
 
-                    fs.Write(Encoding.UTF8.GetBytes(SuperBlock.NameFileSystem));        //Название файловой системы
-                    fs.Write(BitConverter.GetBytes(SuperBlock.SizeSector), 0, 1);       //Размер сектора
+                    int size = 0;
+                    size += Encoding.UTF8.GetBytes(SuperBlock.NameFileSystem).Count();
+                    size += BitConverter.GetBytes(SuperBlock.SizeSector).Count();
+                    size += BitConverter.GetBytes(SuperBlock.CountSectors).Count();
+
+                    fs.Write(Encoding.UTF8.GetBytes(SuperBlock.NameFileSystem), 0, SuperBlock.NameFileSystemSize);        //Название файловой системы
+                    fs.Write(BitConverter.GetBytes(SuperBlock.SizeSector));       //Размер сектора
                     fs.Write(BitConverter.GetBytes(SuperBlock.CountSectors));         //Количество секторов
                 }
             }
         }
 
-        public void CreateNewFile(string Name, string Extension, string Acess, ushort IDUser, string Value)
+        public void CreateNewFile(string Name, string Extension, string Acess, ushort IDUser, string Value = null)
         {
             using(var fs = new FileStream(_path, FileMode.Open))
             {
@@ -74,15 +82,23 @@ namespace FileSystem_CurseWork_OS
 
                 BitMapInode.Write = true;
 
-                var Inode = new TableInodes(fs, hash)
-                {
-                    NameFile = Name,
-                    FileExtension = Extension,
-                    FileAcess = Acess,
-                    IDUser = IDUser,
-                };
-                
+                var IndexClaster = GetFreeClaster(fs);
 
+                var Claster = new BitMapDataClasters(fs, IndexClaster);
+                Claster.Write = true;
+
+                var Inode = new TableInodes(fs, hash);
+                Inode.NameFile = Name;
+                Inode.FileExtension = Extension;
+                Inode.FileLenght = 1;
+                Inode.FileAcess = Acess;
+                Inode.IDUser = IDUser;
+                Inode.NumberStartClaster = IndexClaster;
+
+                if (Value != null)
+                {
+                    WriteStringInFile(fs, in Inode, Value, false);
+                }
 
             }
         }
@@ -105,9 +121,16 @@ namespace FileSystem_CurseWork_OS
                     {
                         return NewHash;
                     }
-                    else if (new TableInodes(fs, NewHash).NameFile.Equals(Name))
+                    else
                     {
-                        throw new ArgumentOutOfRangeException("Файл с таким именем уже существует!");
+                        var NameSelectFile = new TableInodes(fs, NewHash).NameFile;
+
+                        var charactersToAdd = Enumerable.Repeat('\0', NameSelectFile.Length - Name.Length).ToArray();
+
+                        var CurrentFullName = Name + new string(charactersToAdd);
+
+                        if(NameSelectFile.Equals(CurrentFullName))
+                            throw new ArgumentOutOfRangeException("Файл с таким именем уже существует!");
                     }
                 }
 
@@ -119,29 +142,127 @@ namespace FileSystem_CurseWork_OS
 
             throw new ArgumentOutOfRangeException("Не удалось найти хеш!");
         }
-
         private int GetHash(string Value)
         {
             var Hash = Encoding.UTF8.GetBytes(Value).Select((x, index) => x + index).Sum();
 
-            return Hash % TableInodes.CountElements;
+            var CountElements = TableInodes.CountElements;
+
+            return Hash % CountElements;
         }
         private int GetFreeClaster(FileStream fs)
         {
             var _BitMapClasters = BitMapDataClasters.GetSectorArray(fs);
+            var EmptyIndex = Array.IndexOf(_BitMapClasters, false);
 
-            if (Array.IndexOf(_BitMapClasters, false) != -1)
+            if (EmptyIndex != -1)
             {
-
+                return EmptyIndex;
             }
             else
             {
                 throw new ArgumentOutOfRangeException("Место на диске закончилось, все кластеры заполнены!");
             }
-
-            return -1;
         }
 
+        private void WriteStringInFile(FileStream fs, in TableInodes inode, string Text, bool Append)
+        {
+            if(Append)
+            {
+                var LastIndex = GetIndexLastFileClaster(fs, in inode);
+
+                var LastClaster = new DataClasters(fs, LastIndex);
+
+                var SizeData = DataClasters.DataSectorSize;
+                var DataSector = LastClaster.DataSector;
+
+                if(Text.Length > SizeData - DataSector.Length)
+                {
+                    DataSector += Text.Substring(0, SizeData - DataSector.Length);
+                    LastClaster.DataSector = DataSector;
+
+                    var list = WriteDataInNewLineClasters(fs, Text);
+
+                    LastClaster.NumberNextBlock = list[0];
+                }
+                else
+                {
+                    DataSector += Text;
+                    LastClaster.DataSector = DataSector;
+                }
+            }
+            else
+            {
+                var CurrentClaster = new DataClasters(fs, inode.NumberStartClaster);
+                uint FileLenght = inode.FileLenght;
+
+                for (int i = 0; i < FileLenght; ++i)
+                {
+                    var PrewClaster = CurrentClaster;
+                    CurrentClaster = new DataClasters(fs, CurrentClaster.NumberNextBlock);
+
+                    var CurrentFreeMapClaster = new BitMapDataClasters(fs, PrewClaster.NumberCurrentBlock);
+                    CurrentFreeMapClaster.Write = false;
+
+                    PrewClaster.NumberNextBlock = 0;
+                }
+
+                var ListClasters = WriteDataInNewLineClasters(fs, Text);
+                inode.NumberStartClaster = ListClasters[0];
+                inode.FileLenght = (uint)ListClasters.Count;
+            }
+        }
+
+        private List<int> WriteDataInNewLineClasters(FileStream fs, string Data)
+        {
+            List<int> list = new List<int>();
+
+            var DataArray = Encoding.UTF8.GetBytes(Data);
+
+            int SizeData = DataClasters.DataSectorSize;
+
+            int Count = Convert.ToInt32(Math.Ceiling(Convert.ToDouble(DataArray.Length) / Convert.ToDouble(SizeData)));
+
+            DataClasters PrewClaster = null;
+
+            for(int i = 0; i < Count; ++i)
+            {
+                //Дописать разбиение строки на сектора
+                var DataInWrite = DataArray.Skip(i * SizeData).Take(SizeData).ToArray();
+
+                var ID = GetFreeClaster(fs);
+
+                var CurrentFreeMapClaster = new BitMapDataClasters(fs, ID);
+                CurrentFreeMapClaster.Write = true;
+
+                var CurrentFreeClaster = new DataClasters(fs, ID);
+                CurrentFreeClaster.DataSector = Encoding.UTF8.GetString(DataInWrite);
+
+
+                if (PrewClaster != null)
+                    PrewClaster.NumberNextBlock = ID;
+
+                list.Add(ID);
+            }
+
+            return list;
+        }
+
+        private int GetIndexLastFileClaster(FileStream fs, in TableInodes inode)
+        {
+            //var _BitMapClasters = BitMapDataClasters.GetSectorArray(fs);
+
+            var CurrentClaster = new DataClasters(fs, inode.NumberStartClaster);
+            uint FileLenght = inode.FileLenght;
+
+            for(int i = 0; i < FileLenght - 1; ++i)
+            {
+                CurrentClaster = new DataClasters(fs, CurrentClaster.NumberNextBlock);
+            }
+
+            return CurrentClaster.NumberCurrentBlock;
+        }
+        
 
         private void TestFS()
         {

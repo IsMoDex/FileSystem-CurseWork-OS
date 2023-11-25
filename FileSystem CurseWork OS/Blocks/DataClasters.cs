@@ -8,13 +8,31 @@ namespace FileSystem_CurseWork_OS.Blocks
 {
     internal class DataClasters : BlockBody
     {
+        private int CurrentElement;
         public DataClasters(FileStream fileStream, int Element) : base(fileStream, Element, CountElements, OverallSize, StartByte, EndByte)
         {
+            CurrentElement = Element;
         }
 
-        private static byte DataSectorSize = (byte)(SizeSector - NumberNextBlockSize);
-        private const byte NumberNextBlockSize = sizeof(int);
+        public static byte DataSectorSize = (byte)(SizeSector - NumberNextBlockSize);
+        public const byte NumberNextBlockSize = sizeof(int);
 
+        public int NumberNextBlock
+        {
+            set
+            {
+                WriteBytesOperation(fs, _StartBytePositionSelectedElement + DataSectorSize, BitConverter.GetBytes(value), NumberNextBlockSize);
+            }
+            get
+            {
+                var bytes = ReadBytesOperation(fs, _StartBytePositionSelectedElement + DataSectorSize, NumberNextBlockSize);
+                return BitConverter.ToInt32(bytes);
+            }
+        }
+        public int NumberCurrentBlock
+        {
+            get { return CurrentElement; }
+        }
         public static int CountElements
         {
             get
@@ -22,7 +40,7 @@ namespace FileSystem_CurseWork_OS.Blocks
                 return BitMapDataClasters.CountElements;
             }
         }
-        private static byte SizeSector
+        private static int SizeSector
         {
             get
             {
@@ -39,18 +57,6 @@ namespace FileSystem_CurseWork_OS.Blocks
             {
                 var bytes = ReadBytesOperation(fs, _StartBytePositionSelectedElement, DataSectorSize);
                 return Encoding.UTF8.GetString(bytes);
-            }
-        }
-        public int NumberNextBlock
-        {
-            set
-            {
-                WriteBytesOperation(fs, _StartBytePositionSelectedElement + DataSectorSize, BitConverter.GetBytes(value), NumberNextBlockSize);
-            }
-            get
-            {
-                var bytes = ReadBytesOperation(fs, _StartBytePositionSelectedElement + DataSectorSize, NumberNextBlockSize);
-                return BitConverter.ToInt32(bytes);
             }
         }
 

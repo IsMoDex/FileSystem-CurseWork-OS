@@ -55,6 +55,10 @@ namespace FileSystem_CurseWork_OS.Blocks
             }
         }
 
+        public static int CountOccupiedSpace(FileStream fs)
+        {
+            return GetSectorArray(fs).Where(x => x == true).Count();
+        }
         public static bool[] GetSectorArray(FileStream fs)
         {
             var data = new byte[CountElements];
