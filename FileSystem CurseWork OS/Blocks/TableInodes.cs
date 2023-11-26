@@ -39,6 +39,9 @@ namespace FileSystem_CurseWork_OS.Blocks
                 return Encoding.UTF8.GetString(bytes);
             }
         }           //50
+        /// <summary>
+        /// Изменить на битовые значения!
+        /// </summary>
         public string FileExtension
         {
             set
@@ -99,7 +102,29 @@ namespace FileSystem_CurseWork_OS.Blocks
                 return BitConverter.ToInt32(bytes);
             }
         }    //4
-             //75
+                                            //75
+
+        public string Content
+        {
+            get
+            {
+                var NumberClaster = NumberStartClaster;
+                var CountClasters = FileLenght;
+
+                string Result = string.Empty;
+
+                for (int i = 0; i < CountClasters; ++i)
+                {
+                    var Claster = new DataClasters(fs, NumberClaster);
+
+                    Result += Claster.DataSector;
+
+                    NumberClaster = Claster.NumberNextBlock;
+                }
+
+                return Result;
+            }
+        }
 
         public static int OverallSize
         {

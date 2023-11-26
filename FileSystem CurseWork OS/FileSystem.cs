@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -12,13 +13,14 @@ namespace FileSystem_CurseWork_OS
 {
     class FileSystem
     {
-        public string _path = "FS.data";
+        private string _path = "FS.data";
 
-        public FileSystem()
+        public FileSystem(string path, bool Create)
         {
+            _path = path;
             //File.Delete(_path);
 
-            if (File.Exists(_path))
+            if (!Create)
             {
 
                 using (FileStream fs = new FileStream(_path, FileMode.Open))
@@ -39,7 +41,12 @@ namespace FileSystem_CurseWork_OS
                     SuperBlock.CountSectors = BitConverter.ToInt32(bytes);
                 }
 
-                CreateNewFile("NewFile", "txt", "rwxrwx", 0, "Text\nRandomText");
+                //string Data = new string(Enumerable.Repeat('B', DataClasters.DataSectorSize / 2 + 1).ToArray());
+
+                ////CreateNewFile("TestFile", "txt", "rwxrwx", 0, new string (Enumerable.Repeat('A', DataClasters.DataSectorSize * 3 - DataClasters.DataSectorSize / 2).ToArray()));
+
+                //WriteStringInFile("TestFile", Data, false);
+                
 
                 //TestFS();
                 
@@ -47,16 +54,16 @@ namespace FileSystem_CurseWork_OS
             }
             else
             {
-                using (FileStream fs = new FileStream(_path, FileMode.Create))
+                using (FileStream fs = new FileStream(_path, FileMode.Open))
                 {
-                    var Count = SuperBlock.SizeFileSystem;
+                    //var Count = SuperBlock.SizeFileSystem;
 
-                    for (long i = 0; i < Count; ++i)
-                    {
-                        fs.WriteByte(0);
-                    }
+                    //for (long i = 0; i < Count; ++i)
+                    //{
+                    //    fs.WriteByte(0);
+                    //}
 
-                    //DataOperatorFS.WriteSuperBlock(fs);
+                    ////DataOperatorFS.WriteSuperBlock(fs);
 
                     //Записываем SuperBlock
                     fs.Seek(0, SeekOrigin.Begin);
@@ -67,12 +74,20 @@ namespace FileSystem_CurseWork_OS
                     size += BitConverter.GetBytes(SuperBlock.CountSectors).Count();
 
                     fs.Write(Encoding.UTF8.GetBytes(SuperBlock.NameFileSystem), 0, SuperBlock.NameFileSystemSize);        //Название файловой системы
-                    fs.Write(BitConverter.GetBytes(SuperBlock.SizeSector));       //Размер сектора
+                    fs.Write(BitConverter.GetBytes(SuperBlock.SizeSector));           //Размер сектора
                     fs.Write(BitConverter.GetBytes(SuperBlock.CountSectors));         //Количество секторов
                 }
             }
         }
 
+        /// <summary>
+        /// Метод создающий файл с заданными параметрами.
+        /// </summary>
+        /// <param name="Name">Название файла</param>
+        /// <param name="Extension">Расширения файла</param>
+        /// <param name="Acess">Доступ к файлу</param>
+        /// <param name="IDUser">Код пользователя создавшего файл</param>
+        /// <param name="Value">Данные для записи в файл</param>
         public void CreateNewFile(string Name, string Extension, string Acess, ushort IDUser, string Value = null)
         {
             using(var fs = new FileStream(_path, FileMode.Open))
@@ -103,6 +118,58 @@ namespace FileSystem_CurseWork_OS
             }
         }
 
+        /// <summary>
+        /// Метод для поулчения содрежимого из файла.
+        /// </summary>
+        /// <param name="Name"></param>
+        /// <returns></returns>
+        public string GetContentFromFile(string Name)
+        {
+            using (var fs = new FileStream(_path, FileMode.Open))
+            {
+                var Inode = GetInodeByName(fs, Name);
+                return Inode.Content;
+            }
+        }
+        public void ChangeFileAcess(string Name, string NewAcces)
+        {
+            if (!Regex.IsMatch(NewAcces, @"^[r-][w-][x-][r-][w-][x-]$"))
+                throw new ArgumentException("Не корректный ввод доступа.");
+
+            using (var fs = new FileStream(_path, FileMode.Open))
+            {
+                var Inode = GetInodeByName(fs,Name);
+
+                Inode.FileAcess = NewAcces;
+            }
+        }
+        public string GetFileAcess(string Name)
+        {
+            using (var fs = new FileStream(_path, FileMode.Open))
+            {
+                var Inode = GetInodeByName(fs, Name);
+
+                return Inode.FileAcess;
+            }
+        }
+
+        public ushort GetNumberFileСreator(string Name)
+        {
+            using (var fs = new FileStream(_path, FileMode.Open))
+            {
+                var Inode = GetInodeByName(fs, Name);
+         
+                return Inode.IDUser;
+            }
+        }
+
+        /// <summary>
+        /// Метод получения свободного хеша из таблицы инодов
+        /// </summary>
+        /// <param name="fs"></param>
+        /// <param name="Name"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
         private int GetFreeHash(FileStream fs, string Name)
         {
             var BitMapInodes = BitMapTableInodes.GetSectorArray(fs);
@@ -142,6 +209,11 @@ namespace FileSystem_CurseWork_OS
 
             throw new ArgumentOutOfRangeException("Не удалось найти хеш!");
         }
+        /// <summary>
+        /// Хеш-метод
+        /// </summary>
+        /// <param name="Value"></param>
+        /// <returns></returns>
         private int GetHash(string Value)
         {
             var Hash = Encoding.UTF8.GetBytes(Value).Select((x, index) => x + index).Sum();
@@ -150,6 +222,17 @@ namespace FileSystem_CurseWork_OS
 
             return Hash % CountElements;
         }
+        private int LinearRehash(int originalHash)
+        {
+            return (originalHash + 1) % TableInodes.CountElements;
+        }
+        
+        /// <summary>
+        /// Метод получения свободного кластера из таблицы кластеров.
+        /// </summary>
+        /// <param name="fs"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
         private int GetFreeClaster(FileStream fs)
         {
             var _BitMapClasters = BitMapDataClasters.GetSectorArray(fs);
@@ -165,6 +248,13 @@ namespace FileSystem_CurseWork_OS
             }
         }
 
+        /// <summary>
+        /// Метод записи данных в выобранный файл по иноду
+        /// </summary>
+        /// <param name="fs">Файловый поток</param>
+        /// <param name="inode">Инод выбранного файла</param>
+        /// <param name="Text">Текст для записи</param>
+        /// <param name="Append">Добавить или змаменить (True/False)</param>
         private void WriteStringInFile(FileStream fs, in TableInodes inode, string Text, bool Append)
         {
             if(Append)
@@ -176,7 +266,10 @@ namespace FileSystem_CurseWork_OS
                 var SizeData = DataClasters.DataSectorSize;
                 var DataSector = LastClaster.DataSector;
 
-                if(Text.Length > SizeData - DataSector.Length)
+                if (DataSector.IndexOf('\0') != -1)
+                    DataSector = DataSector.Substring(0, DataSector.IndexOf('\0'));
+
+                if (Text.Length > SizeData - DataSector.Length)
                 {
                     DataSector += Text.Substring(0, SizeData - DataSector.Length);
                     LastClaster.DataSector = DataSector;
@@ -200,6 +293,7 @@ namespace FileSystem_CurseWork_OS
                 {
                     var PrewClaster = CurrentClaster;
                     CurrentClaster = new DataClasters(fs, CurrentClaster.NumberNextBlock);
+                    CurrentClaster.DataSector = string.Empty;
 
                     var CurrentFreeMapClaster = new BitMapDataClasters(fs, PrewClaster.NumberCurrentBlock);
                     CurrentFreeMapClaster.Write = false;
@@ -212,7 +306,66 @@ namespace FileSystem_CurseWork_OS
                 inode.FileLenght = (uint)ListClasters.Count;
             }
         }
+        /// <summary>
+        /// Запись данных в файл по имени.
+        /// </summary>
+        /// <param name="NameFile">Названия файла для редактирования</param>
+        /// <param name="Text">Текст для записи(будет разбит по кластерам)</param>
+        /// <param name="Append">Добавить или змаменить (True/False)</param>
+        public void WriteStringInFile(string NameFile, string Text, bool Append)
+        {
+            using(var fs = new FileStream(_path, FileMode.Open))
+            {
+                var Inode = GetInodeByName(fs, NameFile);
+                WriteStringInFile(fs, Inode, Text, Append);
+            }
+        }
 
+        /// <summary>
+        /// Метод получения инода по имени файла.
+        /// </summary>
+        /// <param name="fs"></param>
+        /// <param name="NameFile"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        private TableInodes GetInodeByName(FileStream fs, string NameFile)
+        {
+            var Hash = GetHash(NameFile);
+            var Count = TableInodes.CountElements;
+
+            for(int i = 0; i < Count; ++i)
+            {
+                var NewHash = (Hash + i) % Count;
+                var Inode = new TableInodes(fs, NewHash);
+
+                var NameSelectFile = Inode.NameFile;
+
+                var charactersToAdd = Enumerable.Repeat('\0', NameSelectFile.Length - NameFile.Length).ToArray();
+
+                var CurrentFullName = NameFile + new string(charactersToAdd);
+
+                if (NameSelectFile.Equals(CurrentFullName))
+                    return Inode;
+
+            }
+
+            throw new ArgumentOutOfRangeException("Файла с таким именем не существует!");
+        } 
+
+        //private TableInodes GetInodeByName(string NameFile)
+        //{
+        //    using (var fs = new FileStream(_path, FileMode.Open))
+        //    {
+        //        return GetInodeByName(fs, NameFile);
+        //    }
+        //}
+
+        /// <summary>
+        /// Метод разбиения и записи строки по кластерам.
+        /// </summary>
+        /// <param name="fs"></param>
+        /// <param name="Data"></param>
+        /// <returns></returns>
         private List<int> WriteDataInNewLineClasters(FileStream fs, string Data)
         {
             List<int> list = new List<int>();
@@ -242,12 +395,20 @@ namespace FileSystem_CurseWork_OS
                 if (PrewClaster != null)
                     PrewClaster.NumberNextBlock = ID;
 
+                PrewClaster = CurrentFreeClaster;   
+
                 list.Add(ID);
             }
 
             return list;
         }
 
+        /// <summary>
+        /// Метод получения последнего номера кластера инода.
+        /// </summary>
+        /// <param name="fs"></param>
+        /// <param name="inode"></param>
+        /// <returns></returns>
         private int GetIndexLastFileClaster(FileStream fs, in TableInodes inode)
         {
             //var _BitMapClasters = BitMapDataClasters.GetSectorArray(fs);
@@ -263,6 +424,34 @@ namespace FileSystem_CurseWork_OS
             return CurrentClaster.NumberCurrentBlock;
         }
         
+        public List<string> GetListInformationAboutAllFiles()
+        {
+            using (var fs = new FileStream(_path, FileMode.Open))
+            {
+                var list = new List<string>();
+
+                var BitMapArray = BitMapTableInodes.GetSectorArray(fs);
+
+                for(int i = 0; i < BitMapArray.Length; ++i)
+                {
+                    if (BitMapArray[i])
+                    {
+                        var Inode = new TableInodes(fs, i);
+
+                        string str = $"" +
+                            $"{Inode.FileAcess}\t" +
+                            $"{Inode.IDUser}\t" +
+                            $"{Inode.FileLenght * SuperBlock.SizeSector}\t" +
+                            $"{Inode.NameFile}\t" +
+                            $"{Inode.FileExtension}\n";
+
+                        list.Add(str);
+                    }
+                }
+
+                return list;
+            }
+        }
 
         private void TestFS()
         {
