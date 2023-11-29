@@ -14,7 +14,13 @@ namespace FileSystem_CurseWork_OS.Blocks
             CurrentElement = Element;
         }
 
-        public static byte DataSectorSize = (byte)(SizeSector - NumberNextBlockSize);
+        public static byte DataSectorSize
+        {
+            get
+            {
+                return (byte) (SizeSector - NumberNextBlockSize);
+            }
+        }
         public const byte NumberNextBlockSize = sizeof(int);
 
         public int NumberNextBlock

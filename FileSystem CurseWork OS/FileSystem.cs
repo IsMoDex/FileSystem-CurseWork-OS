@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -92,30 +93,37 @@ namespace FileSystem_CurseWork_OS
         {
             using(var fs = new FileStream(_path, FileMode.Open))
             {
-                var hash = GetFreeHash(fs, Name);
-                var BitMapInode = new BitMapTableInodes(fs, hash);
-
-                BitMapInode.Write = true;
-
-                var IndexClaster = GetFreeClaster(fs);
-
-                var Claster = new BitMapDataClasters(fs, IndexClaster);
-                Claster.Write = true;
-
-                var Inode = new TableInodes(fs, hash);
-                Inode.NameFile = Name;
-                Inode.FileExtension = Extension;
-                Inode.FileLenght = 1;
-                Inode.FileAcess = Acess;
-                Inode.IDUser = IDUser;
-                Inode.NumberStartClaster = IndexClaster;
-
-                if (Value != null)
-                {
-                    WriteStringInFile(fs, in Inode, Value, false);
-                }
-
+                CreateNewFile(fs, Name, Extension, Acess, IDUser, Value);
             }
+        }
+        private void CreateNewFile(FileStream fs, string Name, string Extension, string Acess, ushort IDUser, string Value = null)
+        {
+            if (Extension.Length > 0 && !Regex.IsMatch(Extension, @"^\."))
+                throw new ArgumentException("Расширение файла должно иметь точку в начале!");
+
+            var hash = GetFreeHash(fs, Name);
+            var BitMapInode = new BitMapTableInodes(fs, hash);
+
+            BitMapInode.Write = true;
+
+            var IndexClaster = GetFreeClaster(fs);
+
+            var Claster = new BitMapDataClasters(fs, IndexClaster);
+            Claster.Write = true;
+
+            var Inode = new TableInodes(fs, hash);
+            Inode.NameFile = Name;
+            Inode.FileExtension = Extension;
+            Inode.FileLenght = 1;
+            Inode.FileAcess = Acess;
+            Inode.IDUser = IDUser;
+            Inode.NumberStartClaster = IndexClaster;
+
+            if (Value != null)
+            {
+                WriteStringInFile(fs, in Inode, Value, false);
+            }
+
         }
 
         /// <summary>
@@ -131,6 +139,7 @@ namespace FileSystem_CurseWork_OS
                 return Inode.Content;
             }
         }
+        
         public void ChangeFileAcess(string Name, string NewAcces)
         {
             if (!Regex.IsMatch(NewAcces, @"^[r-][w-][x-][r-][w-][x-]$"))
@@ -266,38 +275,63 @@ namespace FileSystem_CurseWork_OS
                 var SizeData = DataClasters.DataSectorSize;
                 var DataSector = LastClaster.DataSector;
 
-                if (DataSector.IndexOf('\0') != -1)
+                if (Regex.IsMatch(DataSector, @"\0"))
                     DataSector = DataSector.Substring(0, DataSector.IndexOf('\0'));
 
-                if (Text.Length > SizeData - DataSector.Length)
-                {
-                    DataSector += Text.Substring(0, SizeData - DataSector.Length);
-                    LastClaster.DataSector = DataSector;
+                var FreeSpaceSize = SizeData - DataSector.Length;
 
-                    var list = WriteDataInNewLineClasters(fs, Text);
-
-                    LastClaster.NumberNextBlock = list[0];
-                }
-                else
+                if(FreeSpaceSize >  0)
                 {
-                    DataSector += Text;
-                    LastClaster.DataSector = DataSector;
+                    if(Text.Length > FreeSpaceSize)
+                    {
+                        DataSector += Text.Substring(0, FreeSpaceSize);
+                        Text = Text.Substring(FreeSpaceSize);
+                        LastClaster.DataSector = DataSector;
+                    }
+                    else
+                    {
+                        DataSector += Text;
+                        LastClaster.DataSector = DataSector;
+                        return;
+                    }
                 }
+
+                var ListClasters = WriteDataInNewLineClasters(fs, Text);
+                LastClaster.NumberNextBlock = ListClasters[0];
+
+                inode.FileLenght = (uint)ListClasters.Count + inode.FileLenght;
+
+                //if (Text.Length < SizeData - DataSector.Length)
+                //{
+                //    DataSector += Text.Substring(0, Text.Length - DataSector.Length);
+                //    LastClaster.DataSector = DataSector;
+
+                //    var list = WriteDataInNewLineClasters(fs, Text);
+
+                //    LastClaster.NumberNextBlock = list[0];
+                //}
+                //else
+                //{
+                //    DataSector += Text;
+                //    LastClaster.DataSector = DataSector;
+                //}
             }
             else
             {
                 var CurrentClaster = new DataClasters(fs, inode.NumberStartClaster);
+
                 uint FileLenght = inode.FileLenght;
 
                 for (int i = 0; i < FileLenght; ++i)
                 {
-                    var PrewClaster = CurrentClaster;
-                    CurrentClaster = new DataClasters(fs, CurrentClaster.NumberNextBlock);
-                    CurrentClaster.DataSector = string.Empty;
-
-                    var CurrentFreeMapClaster = new BitMapDataClasters(fs, PrewClaster.NumberCurrentBlock);
+                    var CurrentFreeMapClaster = new BitMapDataClasters(fs, CurrentClaster.NumberCurrentBlock);
                     CurrentFreeMapClaster.Write = false;
 
+                    var PrewClaster = CurrentClaster;
+
+                    CurrentClaster = new DataClasters(fs, CurrentClaster.NumberNextBlock);
+                    
+                    PrewClaster.DataSector = string.Empty;
                     PrewClaster.NumberNextBlock = 0;
                 }
 
@@ -346,7 +380,6 @@ namespace FileSystem_CurseWork_OS
 
                 if (NameSelectFile.Equals(CurrentFullName))
                     return Inode;
-
             }
 
             throw new ArgumentOutOfRangeException("Файла с таким именем не существует!");
@@ -442,7 +475,7 @@ namespace FileSystem_CurseWork_OS
                             $"{Inode.FileAcess}\t" +
                             $"{Inode.IDUser}\t" +
                             $"{Inode.FileLenght * SuperBlock.SizeSector}\t" +
-                            $"{Inode.NameFile}\t" +
+                            $"{Inode.NameFile}" +
                             $"{Inode.FileExtension}\n";
 
                         list.Add(str);
@@ -450,6 +483,121 @@ namespace FileSystem_CurseWork_OS
                 }
 
                 return list;
+            }
+        }
+
+        public void CopyFile(string Name, string NewName)
+        {
+            using(var fs = new FileStream(_path, FileMode.Open))
+            {
+                if (Name.Equals(NewName))
+                    throw new ArgumentException("Имена не могут быть равны!");
+
+                var OldInode = GetInodeByName(fs, Name);
+
+            }
+        }
+
+        public void RenameFile(string Name, string NewName)
+        {
+            using (var fs = new FileStream(_path, FileMode.Open))
+            {
+                if (Name.Equals(NewName))
+                    throw new ArgumentException("Имена не могут быть равны!");
+
+                var PositionExtension = NewName.LastIndexOf('.');
+
+                var OldInode = GetInodeByName(fs, Name);
+                var OldBitMap = new BitMapTableInodes(fs, OldInode.NumberCurrentWrite);
+
+                OldBitMap.Write = false;
+                ///
+
+                var hash = GetFreeHash(fs, NewName);
+                var BitMapInode = new BitMapTableInodes(fs, hash);
+
+                BitMapInode.Write = true;
+
+                ///
+                var Inode = new TableInodes(fs, hash);
+                Inode.NameFile = NewName;
+
+                if (PositionExtension == -1)
+                    Inode.FileExtension = OldInode.FileExtension;
+                else
+                    Inode.FileExtension = NewName.Substring(PositionExtension, NewName.Length - PositionExtension);
+
+                Inode.FileLenght = OldInode.FileLenght;
+                Inode.FileAcess = OldInode.FileAcess;
+                Inode.IDUser = OldInode.IDUser;
+                Inode.NumberStartClaster = OldInode.NumberStartClaster;
+            }
+        }
+
+        public void RemoveFile(string Name)
+        {
+            using(var fs = new FileStream(_path, FileMode.Open))
+            {
+                var Inode = GetInodeByName(fs, Name);
+                RemoveFile(fs, Inode);
+            }
+        }
+        private void RemoveFile(FileStream fs, in TableInodes Inode)
+        {
+            var BitMap = new BitMapTableInodes(fs, Inode.NumberCurrentWrite);
+
+            var NumberClaster = Inode.NumberStartClaster;
+            var CountClasters = Inode.FileLenght;
+
+            string Result = string.Empty;
+
+            for (int i = 0; i < CountClasters; ++i)
+            {
+                var Claster = new DataClasters(fs, NumberClaster);
+                var BitMapClaster = new BitMapDataClasters(fs, NumberClaster);
+
+                Result += Claster.DataSector;
+
+                NumberClaster = Claster.NumberNextBlock;
+
+                Claster.NumberNextBlock = 0;
+                Claster.DataSector = string.Empty;
+
+                BitMapClaster.Write = false;
+            }
+
+            //Inode.NumberStartClaster = 0;
+            //Inode.NameFile = string.Empty;
+            //Inode.IDUser = 0;
+            BitMap.Write = false;
+        }
+
+        public void ChangeNumberFileCreator(string Name, ushort NumberCreator)
+        {
+            using(var fs = new FileStream(_path, FileMode.Open))
+            {
+                var Inode = GetInodeByName(fs, Name);
+
+                Inode.IDUser = NumberCreator;
+            }
+        }
+
+        public void DeleteFilesBelongingUser(ushort IDUser)
+        {
+            using(var fs = new FileStream(_path, FileMode.Open))
+            {
+                var BitMap = BitMapTableInodes.GetSectorArray(fs);
+
+                for(int i = 0; i < BitMap.Length; ++i)
+                {
+                    if (BitMap[i])  //Если файл существует
+                    {
+                        var Inode = new TableInodes(fs, i);
+
+                        if(Inode.IDUser == IDUser)  //Если файл принадлежит данному пользователю
+                            RemoveFile(fs, Inode);
+                    }
+                }
             }
         }
 

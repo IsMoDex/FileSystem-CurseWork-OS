@@ -8,8 +8,10 @@ namespace FileSystem_CurseWork_OS.Blocks
 {
     internal class TableInodes : BlockBody
     {
+        private int CurrentElement;
         public TableInodes(FileStream fileStream, int Element) : base(fileStream, Element, CountElements, OverallSize, StartByte, EndByte)
         {
+            CurrentElement = Element;
         }
 
         public const byte NameFileSize = 50;  //Для UTF8
@@ -27,6 +29,10 @@ namespace FileSystem_CurseWork_OS.Blocks
             }
         }
 
+        public int NumberCurrentWrite
+        {
+            get { return CurrentElement; }
+        }
         public string NameFile
         {
             set
