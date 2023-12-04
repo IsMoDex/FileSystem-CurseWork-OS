@@ -17,7 +17,7 @@ namespace FileSystem_CurseWork_OS
         string _path = "FS.data";
 
         string UserFile = "SAM";
-        public string[] UsersData
+        string[] UsersData
         {
             get
             {
@@ -292,7 +292,17 @@ namespace FileSystem_CurseWork_OS
             //    }
             //}
 
-            fs.WriteStringInFile(UserFile, string.Join('\n', UsersData.Where(x => x.Length > 0)), false);
+            UsersData = UsersData.Where(x => x.Length > 0).Select(x => x + "\n").ToArray();
+
+            fs.WriteStringInFile(UserFile, string.Join("", UsersData), false);
+        }
+
+        public string[] GetAllUsers()
+        {
+            if (!Admin)
+                throw new FieldAccessException("У вас нет прав просматривать список пользователей!");
+
+            return UsersData;
         }
 
         private void Checking_Access_OnlyAdmin_CurrentUserToFile(string Name)
@@ -307,18 +317,18 @@ namespace FileSystem_CurseWork_OS
         {
             var NumberCreator = fs.GetNumberFileСreator(Name);
 
-            if (NumberCreator != IDUser || !Admin)
+            if (NumberCreator != IDUser && !Admin)
                 throw new FieldAccessException("У вас нет прав изменять параметры этого файла!");
 
             if (Name.Equals(UserFile))
-                throw new FieldAccessException("Вы не можете изменить системный файл с пользователяеми!");
+                throw new FieldAccessException("Вы не можете изменить системный файл с пользователями!");
         }
         private void Checking_Access_Write_CurrentUserToFile(string Name)
         {
             var Acess = fs.GetFileAcess(Name);
             var NumberCreator = fs.GetNumberFileСreator(Name);
 
-            if ((NumberCreator == IDUser && !Regex.IsMatch(Acess, $"^.w.+")) || !Admin || (NumberCreator != IDUser && !Regex.IsMatch(Acess, $"^....w.")))
+            if ((NumberCreator == IDUser && !Regex.IsMatch(Acess, $"^.w.+")) && !Admin || (NumberCreator != IDUser && !Regex.IsMatch(Acess, $"^....w.")))
                 throw new FieldAccessException("У вас нет прав записи или изменения этого файла!");
 
             if (Name.Equals(UserFile))
@@ -331,7 +341,7 @@ namespace FileSystem_CurseWork_OS
             var Acess = fs.GetFileAcess(Name);
             var NumberCreator = fs.GetNumberFileСreator(Name);
 
-            if ((NumberCreator == IDUser && !Regex.IsMatch(Acess, $"^r..+")) || !Admin || (NumberCreator != IDUser && !Regex.IsMatch(Acess, $"^...r..")))
+            if ((NumberCreator == IDUser && !Regex.IsMatch(Acess, $"^r")) && !Admin || (NumberCreator != IDUser && !Regex.IsMatch(Acess, $"^...r..")))
                 throw new FieldAccessException("У вас нет прав чтения этого файла!");
 
             if (Name.Equals(UserFile) && !Admin)

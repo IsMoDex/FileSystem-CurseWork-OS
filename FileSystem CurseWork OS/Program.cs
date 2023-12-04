@@ -135,7 +135,7 @@ class Program
                         break;
 
                     case "users":
-                        Console.Write(string.Join('\n', os.UsersData));
+                        Console.Write(string.Join('\n', os.GetAllUsers()));
                         break;
 
                     case "clear":
@@ -145,7 +145,7 @@ class Program
                     case "help":
 
                         Console.WriteLine(
-                            "ls\t<source>\tОтображает содержимое указанной директории <source> (или текущей, если параметр не указан).\n" +
+                            "ls\tОтображает содержимое корневой директории.\n" +
                             "cp\t<file>\tКопирует файлы  <file> \n" +
                             "touch\t<file>\tСоздает новый файл <file> или обновляет время его последнего доступа и модификации.\n" +
                             "rm\t<file>\tУдаляет указанный файл.\n" +

@@ -98,8 +98,8 @@ namespace FileSystem_CurseWork_OS
         }
         private void CreateNewFile(FileStream fs, string Name, string Extension, string Acess, ushort IDUser, string Value = null)
         {
-            if (Extension.Length > 0 && !Regex.IsMatch(Extension, @"^\."))
-                throw new ArgumentException("Расширение файла должно иметь точку в начале!");
+            if (Extension.Length != 0 && (Extension.Length < 2 || !Regex.IsMatch(Extension, @"^\.")))
+                throw new ArgumentException("Расширение файла должно иметь точку в начале и содержать хотя-бы один символ!");
 
             var hash = GetFreeHash(fs, Name);
             var BitMapInode = new BitMapTableInodes(fs, hash);
@@ -493,8 +493,18 @@ namespace FileSystem_CurseWork_OS
                 if (Name.Equals(NewName))
                     throw new ArgumentException("Имена не могут быть равны!");
 
-                var OldInode = GetInodeByName(fs, Name);
+                var Inode = GetInodeByName(fs, Name);
 
+                var Extension = string.Empty;
+
+                var PointSition = NewName.LastIndexOf('.');
+
+                if(PointSition != -1)
+                    Extension = NewName.Substring(PointSition, NewName.Length - PointSition);
+                else
+                    Extension = Regex.Replace(Inode.FileExtension, @"\0", "");
+
+                CreateNewFile(fs, NewName, Extension, Inode.FileAcess, Inode.IDUser, Inode.Content);
             }
         }
 
