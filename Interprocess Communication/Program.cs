@@ -8,8 +8,8 @@ class Program
 
         Console.WriteLine("Hello, World!");
 
-        processScheduler.AddNewProcess(30);
-        processScheduler.AddNewProcess(10);
+        processScheduler.AddNewProcess(300, 19);
+        processScheduler.AddNewProcess(10, -20);
         processScheduler.AddNewProcess(15);
         processScheduler.AddNewProcess(22);
 

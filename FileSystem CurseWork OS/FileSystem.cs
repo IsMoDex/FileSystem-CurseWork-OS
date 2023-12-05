@@ -370,6 +370,10 @@ namespace FileSystem_CurseWork_OS
             for(int i = 0; i < Count; ++i)
             {
                 var NewHash = (Hash + i) % Count;
+
+                if (!new BitMapTableInodes(fs, NewHash).Write)
+                    continue;
+
                 var Inode = new TableInodes(fs, NewHash);
 
                 var NameSelectFile = Inode.NameFile;

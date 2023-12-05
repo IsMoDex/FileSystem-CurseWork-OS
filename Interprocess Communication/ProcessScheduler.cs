@@ -62,12 +62,15 @@ namespace Interprocess_Communication
                 AddProcessInQueque(process);
             }
 
-            Task.Delay(Math.Min(QuantumOfTime_MS, ProcessWork_MS));
+            //Task.Delay(Math.Min(QuantumOfTime_MS, ProcessWork_MS));
+            Thread.Sleep(Math.Min(QuantumOfTime_MS, ProcessWork_MS));
         }
 
         private void SortQueque()
         {
-            ProcessQueue = ProcessQueue.OrderBy(proc => proc.RequiredTime_MS).ThenBy(proc => proc.Priorety).ToList();
+            //Thread.Sleep(20000);
+            if(ProcessQueue.Count > 1)
+                ProcessQueue = ProcessQueue.OrderBy(proc => proc.RequiredTime_MS).ThenBy(proc => proc.Priorety).ToList();
         }
 
         private void AddProcessInQueque(in Process process)
@@ -90,20 +93,12 @@ namespace Interprocess_Communication
             return first;
         }
 
-        public void AddNewProcess(int WorkingTime)
+        public void AddNewProcess(int WorkingTime, sbyte Priorety = 0) //0 стандартный приоритет
         {
-            AddNewProcess(WorkingTime, 0);  //0 стандартный приоритет
-        }
+            int ProcessID = 0;
 
-        public void AddNewProcess(int WorkingTime, byte Priorety)
-        {
-            AddNewProcess(ListOfProcesses.Count, WorkingTime, Priorety);
-        }
-
-        public void AddNewProcess(int ProcessID, int WorkingTime, byte Priorety)
-        {
-            if (ListOfProcesses.Where(x => x.ID_Process == ProcessID).Count() > 0)
-                throw new ArgumentException("Процесс с таким ID уже существует!");
+            if (ListOfProcesses.Count > 0)
+                ProcessID = ListOfProcesses.OrderBy(process => process.ID_Process).First().ID_Process + 1;
 
             ListOfProcesses.Add(new Process(ProcessID, WorkingTime, Priorety));
             AddProcessInQueque(ListOfProcesses.Last());
