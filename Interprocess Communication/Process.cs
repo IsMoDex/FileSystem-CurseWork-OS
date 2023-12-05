@@ -21,13 +21,18 @@ namespace Interprocess_Communication
 
         public int RequiredTime_MS;
 
+        private const sbyte MinRange = -20;
+        private const sbyte MaxRange = 19;
+
+        
+
         public sbyte Priorety
         {
             get => _priorety;
             set
             {
-                if (value > 19 || value < -20)
-                    throw new ArgumentOutOfRangeException("Приоритет должен быть в диапазоне от -20 до 19 включительно");
+                if (value > MaxRange || value < MinRange)
+                    throw new ArgumentOutOfRangeException($"Приоритет должен быть в диапазоне от {MinRange} до {MaxRange} включительно");
 
                 _priorety = value;
             }

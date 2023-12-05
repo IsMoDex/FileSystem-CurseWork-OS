@@ -2,17 +2,13 @@
 
 class Program
 {
+    static OperationSystem os;
     static void Main(string[] args)
     {
-        ProcessScheduler processScheduler = new ProcessScheduler();
+        bool ConstParametries = false;
 
-        Console.WriteLine("Hello, World!");
+        Console.WriteLine("");
 
-        processScheduler.AddNewProcess(300, 19);
-        processScheduler.AddNewProcess(10, -20);
-        processScheduler.AddNewProcess(15);
-        processScheduler.AddNewProcess(22);
-
-        Console.ReadLine();
+        os = new OperationSystem(ConstParametries);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.SymbolStore;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,7 +20,14 @@ namespace Interprocess_Communication
 
         private static volatile bool RunUperation = true;
 
-        public ProcessScheduler() { OperationsWithProcesses(); }
+        private volatile bool _ForAbsolutePrioritets;
+
+        public ProcessScheduler(bool ForAbsolutePrioritets)
+        {
+            _ForAbsolutePrioritets = ForAbsolutePrioritets;
+
+            OperationsWithProcesses();
+        }
 
         private async void OperationsWithProcesses()
         {
@@ -70,7 +78,18 @@ namespace Interprocess_Communication
         {
             //Thread.Sleep(20000);
             if(ProcessQueue.Count > 1)
-                ProcessQueue = ProcessQueue.OrderBy(proc => proc.RequiredTime_MS).ThenBy(proc => proc.Priorety).ToList();
+            {
+                if (_ForAbsolutePrioritets)
+                    ProcessQueue = ProcessQueue
+                        .OrderBy(proc => proc.Priorety)
+                        .ThenBy(proc => proc.RequiredTime_MS)
+                        .ToList();   //В первую очередь сортировка по приоритетам
+                else
+                    ProcessQueue = ProcessQueue
+                        .OrderBy(proc => proc.RequiredTime_MS)
+                        .ThenBy(proc => proc.Priorety)
+                        .ToList();   //В первую очередь сортировка по времени
+            }
         }
 
         private void AddProcessInQueque(in Process process)
@@ -102,6 +121,36 @@ namespace Interprocess_Communication
 
             ListOfProcesses.Add(new Process(ProcessID, WorkingTime, Priorety));
             AddProcessInQueque(ListOfProcesses.Last());
+        }
+
+        private Process GetProcessByID(int ID_Process)
+        {
+            if (ListOfProcesses.Count == 0)
+                throw new ArgumentOutOfRangeException("В системе на данный момент нет ни одного процесса.");
+
+            var ListProcess = ListOfProcesses.Where(process => process.ID_Process == ID_Process);
+
+            if(ListProcess.Count() == 0)
+                throw new ArrayTypeMismatchException("Процесса с заданным ID не существует!");
+
+            return ListProcess.First();
+        }
+
+        public void ChangeProcessWorkingTime(int ID_Process, int WorkingTime)
+        {
+            if (WorkingTime < 0)
+                throw new ArgumentException("Время работы процесса не может быть меньше 0");
+
+            var Process = GetProcessByID(ID_Process);
+
+            Process.RequiredTime_MS = WorkingTime;
+        }
+
+        public void ChangeProcessPriorety(int ID_Process, sbyte Priorety)
+        {
+            var Process = GetProcessByID(ID_Process);
+
+            Process.Priorety = Priorety;
         }
 
         ~ProcessScheduler()
