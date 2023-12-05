@@ -60,6 +60,8 @@ namespace Interprocess_Communication
             if (process == null)
                 return;
 
+            process.Status = 'R';
+
             var ProcessWork_MS = process.RequiredTime_MS;
 
             if (QuantumOfTime_MS > ProcessWork_MS)
@@ -71,7 +73,7 @@ namespace Interprocess_Communication
             }
 
             //Task.Delay(Math.Min(QuantumOfTime_MS, ProcessWork_MS));
-            Thread.Sleep(Math.Min(QuantumOfTime_MS, ProcessWork_MS));
+            Thread.Sleep(Math.Min(QuantumOfTime_MS, ProcessWork_MS) * 100);
         }
 
         private void SortQueque()
@@ -97,7 +99,19 @@ namespace Interprocess_Communication
             if (process == null)
                 return;
 
+            process.Status = GetStatus();
+
             ProcessQueue.Add(process);
+        }
+
+        private char GetStatus()
+        {
+            var random = new Random();
+            var ListStatus = new List<char>() { 'R', 'S', 'T', 'Z', 'W', 'D', 'X', 'I', 'L' };
+
+            var NumberStatus = random.Next(0, ListStatus.Count);
+
+            return ListStatus[NumberStatus];
         }
 
         private Process GetFirstProcessInQuequeAndRemove()
@@ -117,10 +131,16 @@ namespace Interprocess_Communication
             int ProcessID = 0;
 
             if (ListOfProcesses.Count > 0)
-                ProcessID = ListOfProcesses.OrderBy(process => process.ID_Process).First().ID_Process + 1;
+                ProcessID = ListOfProcesses.OrderByDescending(process => process.ID_Process).First().ID_Process + 1;
+
 
             ListOfProcesses.Add(new Process(ProcessID, WorkingTime, Priorety));
-            AddProcessInQueque(ListOfProcesses.Last());
+
+            var Process = ListOfProcesses.Last();
+
+            //Process.Status = GetStatus();
+
+            AddProcessInQueque(Process);
         }
 
         private Process GetProcessByID(int ID_Process)
@@ -151,6 +171,29 @@ namespace Interprocess_Communication
             var Process = GetProcessByID(ID_Process);
 
             Process.Priorety = Priorety;
+        }
+
+        public List<string> GetListInfoProcess() => FillListProcessList(ListOfProcesses);
+
+        public List<string> GetListQuequeInfoProcess() => FillListProcessList(ProcessQueue);
+
+        private List<string> FillListProcessList(in List<Process> ProcessList)
+        {
+            List<string> list = new List<string>();
+
+            list.Add("ID\tTime\tStatus\tPriorety");
+
+            foreach (var process in ProcessList)
+            {
+                var ID = process.ID_Process.ToString();
+                var Time = process.RequiredTime_MS.ToString();
+                var Status = process.Status.ToString();
+                var Priorety = process.Priorety.ToString();
+
+                list.Add(string.Join('\t', ID, Time, Status, Priorety));
+            }
+
+            return list;
         }
 
         ~ProcessScheduler()

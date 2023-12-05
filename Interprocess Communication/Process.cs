@@ -21,10 +21,10 @@ namespace Interprocess_Communication
 
         public int RequiredTime_MS;
 
-        private const sbyte MinRange = -20;
-        private const sbyte MaxRange = 19;
+        public const sbyte MinRange = -20;
+        public const sbyte MaxRange = 19;
 
-        
+        public char Status = 'R';
 
         public sbyte Priorety
         {

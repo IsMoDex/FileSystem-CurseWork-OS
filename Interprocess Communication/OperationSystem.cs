@@ -38,5 +38,9 @@ namespace Interprocess_Communication
                 AddNewProcess(random.Next(0, 1000), (sbyte)random.Next(Process.MinRange, Process.MaxRange));
         }
 
+        public List<string> GetListInfoProcess() => processScheduler.GetListInfoProcess();
+
+        public List<string> GetListQuequeInfoProcess() => processScheduler.GetListQuequeInfoProcess();
+
     }
 }
