@@ -73,7 +73,7 @@ namespace Interprocess_Communication
             }
 
             //Task.Delay(Math.Min(QuantumOfTime_MS, ProcessWork_MS));
-            Thread.Sleep(Math.Min(QuantumOfTime_MS, ProcessWork_MS) * 100);
+            Thread.Sleep(Math.Min(QuantumOfTime_MS, ProcessWork_MS) * 10);
         }
 
         private void SortQueque()

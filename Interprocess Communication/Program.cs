@@ -77,7 +77,7 @@ class Program
 
                         break;
 
-                    case string s when Regex.IsMatch(s, @"^chpp(\s\d+){2}$"):
+                    case string s when Regex.IsMatch(s, @"^chpp(\s\d+)\s(\d+|-\d+)$"):
 
                         var ChangePrioretyString = Regex.Replace(s, @"^chpp\s", "");
 
@@ -126,6 +126,10 @@ class Program
 
                         break;
 
+                    case "clear":
+                        Console.Clear();
+                        break;
+
                     case "help":
 
                         Console.WriteLine("newp\t<time> <priority>\tСоздать новый процесс с временем работы <time> и приоритетом <priority>. Приоритет можно не указывать.");
@@ -134,6 +138,7 @@ class Program
                         Console.WriteLine("gen\t<count>\tСгенерировать количество <count> новый процессов.");
                         Console.WriteLine("ps\tОтобразить все существующие процессы.");
                         Console.WriteLine("top\tОтображение всех существующих процессов в реальном времени в порядке очереди.");
+                        Console.WriteLine("clear\tОчищает консолб.");
 
                         break;
 
