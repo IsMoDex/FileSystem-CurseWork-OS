@@ -1,6 +1,5 @@
 ﻿using Interprocess_Communication;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks.Dataflow;
 
 class Program
 {
@@ -35,7 +34,7 @@ class Program
 
     static void MainMenu()
     {
-        while(true)
+        while (true)
         {
             try
             {
@@ -146,15 +145,15 @@ class Program
                         Console.WriteLine("Команда не обнаружена, вы можете воспользоваться help для получения списка команд.");
                         break;
                 }
-            } 
-            catch(Exception e)
+            }
+            catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
             }
         }
     }
 
-    private static volatile bool WriteTop = true; 
+    private static volatile bool WriteTop = true;
 
     static async void WriteTopProcessOperation()
     {

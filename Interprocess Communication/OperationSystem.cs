@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Interprocess_Communication
+﻿namespace Interprocess_Communication
 {
     internal class OperationSystem
     {
@@ -34,7 +28,7 @@ namespace Interprocess_Communication
         {
             Random random = new Random();
 
-            while(Count-- > 0)
+            while (Count-- > 0)
                 AddNewProcess(random.Next(0, 1000), (sbyte)random.Next(Process.MinRange, Process.MaxRange));
         }
 

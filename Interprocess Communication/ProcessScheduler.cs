@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.SymbolStore;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Interprocess_Communication
+﻿namespace Interprocess_Communication
 {
     internal class ProcessScheduler
     {
@@ -35,7 +27,7 @@ namespace Interprocess_Communication
             {
                 while (RunUperation)
                 {
-                    for(int i = 0; i < CountRepetitionsToCompleteThePass && RunUperation;  i++)
+                    for (int i = 0; i < CountRepetitionsToCompleteThePass && RunUperation; i++)
                     {
                         RunOperationByFirst();
 
@@ -79,7 +71,7 @@ namespace Interprocess_Communication
         private void SortQueque()
         {
             //Thread.Sleep(20000);
-            if(ProcessQueue.Count > 1)
+            if (ProcessQueue.Count > 1)
             {
                 if (_ForAbsolutePrioritets)
                     ProcessQueue = ProcessQueue
@@ -150,7 +142,7 @@ namespace Interprocess_Communication
 
             var ListProcess = ListOfProcesses.Where(process => process.ID_Process == ID_Process);
 
-            if(ListProcess.Count() == 0)
+            if (ListProcess.Count() == 0)
                 throw new ArrayTypeMismatchException("Процесса с заданным ID не существует!");
 
             return ListProcess.First();
