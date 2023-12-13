@@ -5,7 +5,13 @@ VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileSystem CurseWork OS", "FileSystem CurseWork OS\FileSystem CurseWork OS.csproj", "{FD6E92C5-132C-4CD4-A43B-08146906DAA8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interprocess Communication", "Interprocess Communication\Interprocess Communication.csproj", "{CE4552C8-3176-4A7E-B6C7-C41EF8C95066}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Process Scheduler", "Interprocess Communication\Process Scheduler.csproj", "{CE4552C8-3176-4A7E-B6C7-C41EF8C95066}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Interprocess Communication", "Interprocess Communication", "{93BDB6BA-3E0F-4EFB-8798-1FE8CF517F42}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\Учеба\Курс III\Семестр V\ОС\Курсач\Channels.cpp = ..\..\..\Учеба\Курс III\Семестр V\ОС\Курсач\Channels.cpp
+		..\..\..\Учеба\Курс III\Семестр V\ОС\Курсач\Semofor.cpp = ..\..\..\Учеба\Курс III\Семестр V\ОС\Курсач\Semofor.cpp
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
