@@ -14,7 +14,7 @@ namespace Interprocess_Communication
         {
             this.ID_Process = ID_Process;
             RequiredTime_MS = Time;
-            this._priorety = Priorety;
+            this.Priorety = Priorety;
         }
 
         public int ID_Process { get; }
@@ -24,7 +24,14 @@ namespace Interprocess_Communication
         public const sbyte MinRange = -20;
         public const sbyte MaxRange = 19;
 
-        public char Status = 'R';
+        public enum States
+        {
+            R,
+            W,
+            Z
+        }
+
+        public States Condition = States.W;
 
         public sbyte Priorety
         {

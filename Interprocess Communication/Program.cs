@@ -135,9 +135,9 @@ class Program
                         Console.WriteLine("chpwt\t<id> <time>\tИзменить время работы процесса с идентификатором <id> на время <time>.");
                         Console.WriteLine("chpp\t<id> <priorety>\tИзменить приоритет процесса с идентификатором <id> на приоритет <priorety>.");
                         Console.WriteLine("gen\t<count>\tСгенерировать количество <count> новый процессов.");
-                        Console.WriteLine("ps\tОтобразить все существующие процессы.");
-                        Console.WriteLine("top\tОтображение всех существующих процессов в реальном времени в порядке очереди.");
-                        Console.WriteLine("clear\tОчищает консолб.");
+                        Console.WriteLine("ps\t\tОтобразить все существующие процессы.");
+                        Console.WriteLine("top\t\tОтображение всех существующих процессов в реальном времени в порядке очереди.");
+                        Console.WriteLine("clear\t\tОчищает консоль.");
 
                         break;
 
@@ -148,7 +148,7 @@ class Program
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                Console.WriteLine(e.Message.ToString());
             }
         }
     }

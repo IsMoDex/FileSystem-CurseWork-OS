@@ -1,4 +1,6 @@
-﻿namespace Interprocess_Communication
+﻿using System.Diagnostics;
+
+namespace Interprocess_Communication
 {
     internal class ProcessScheduler
     {
@@ -52,7 +54,7 @@
             if (process == null)
                 return;
 
-            process.Status = 'R';
+            process.Condition = Process.States.R;
 
             var ProcessWork_MS = process.RequiredTime_MS;
 
@@ -61,11 +63,16 @@
             else
             {
                 process.RequiredTime_MS = ProcessWork_MS - QuantumOfTime_MS;
+
                 AddProcessInQueque(process);
             }
 
-            //Task.Delay(Math.Min(QuantumOfTime_MS, ProcessWork_MS));
             Thread.Sleep(Math.Min(QuantumOfTime_MS, ProcessWork_MS) * 10);
+
+            if (process.RequiredTime_MS == 0)
+                process.Condition = Process.States.Z;
+            else
+                process.Condition = Process.States.W;
         }
 
         private void SortQueque()
@@ -91,19 +98,7 @@
             if (process == null)
                 return;
 
-            process.Status = GetStatus();
-
             ProcessQueue.Add(process);
-        }
-
-        private char GetStatus()
-        {
-            var random = new Random();
-            var ListStatus = new List<char>() { 'R', 'S', 'T', 'Z', 'W', 'D', 'X', 'I', 'L' };
-
-            var NumberStatus = random.Next(0, ListStatus.Count);
-
-            return ListStatus[NumberStatus];
         }
 
         private Process GetFirstProcessInQuequeAndRemove()
@@ -130,7 +125,7 @@
 
             var Process = ListOfProcesses.Last();
 
-            //Process.Status = GetStatus();
+            Process.Condition = Process.States.W;
 
             AddProcessInQueque(Process);
         }
@@ -179,13 +174,29 @@
             {
                 var ID = process.ID_Process.ToString();
                 var Time = process.RequiredTime_MS.ToString();
-                var Status = process.Status.ToString();
+                var Status = GetCharStatus(process.Condition);
                 var Priorety = process.Priorety.ToString();
 
                 list.Add(string.Join('\t', ID, Time, Status, Priorety));
             }
 
             return list;
+        }
+
+        private char GetCharStatus(Process.States status)
+        {
+            switch (status)
+            {
+                case Process.States.R:
+                    return 'R';
+                case Process.States.W:
+                    return 'W';
+                case Process.States.Z:
+                    return 'Z';
+
+                default:
+                    throw new ArgumentException($"Статус процесса \"{status}\", не обнаружен!");
+            }
         }
 
         ~ProcessScheduler()
