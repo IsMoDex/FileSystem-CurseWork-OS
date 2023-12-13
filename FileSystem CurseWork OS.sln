@@ -5,7 +5,7 @@ VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileSystem CurseWork OS", "FileSystem CurseWork OS\FileSystem CurseWork OS.csproj", "{FD6E92C5-132C-4CD4-A43B-08146906DAA8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interprocess Communication", "Interprocess Communication\Interprocess Communication.csproj", "{CE4552C8-3176-4A7E-B6C7-C41EF8C95066}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Process Scheduler", "Interprocess Communication\Process Scheduler.csproj", "{CE4552C8-3176-4A7E-B6C7-C41EF8C95066}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
