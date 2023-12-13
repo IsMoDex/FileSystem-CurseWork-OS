@@ -7,6 +7,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileSystem CurseWork OS", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Process Scheduler", "Process Scheduler\Process Scheduler.csproj", "{CE4552C8-3176-4A7E-B6C7-C41EF8C95066}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Interprocess Communication", "Interprocess Communication", "{3364188F-7C14-4D92-B656-280F1FC6CD8E}"
+	ProjectSection(SolutionItems) = preProject
+		Interprocess Communication\Channels.cpp = Interprocess Communication\Channels.cpp
+		Interprocess Communication\Semofor.cpp = Interprocess Communication\Semofor.cpp
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
