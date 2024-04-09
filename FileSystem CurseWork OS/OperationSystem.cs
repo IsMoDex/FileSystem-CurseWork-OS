@@ -92,13 +92,15 @@ namespace FileSystem_CurseWork_OS
 
         public void CreateFile(string Name, string Extension, string Value = null) => fs.CreateNewFile(Name, Extension, "rwxrwx", IDUser, Value);
 
-        public void CreateNewUser(string Name, string Password, bool ForAdmin)
+        public void CreateNewUser(string Name, string Password, bool ForAdmin)  ///Переписать функцию добавления пользователей, снова...
         {
             if (ForAdmin && !Admin)
                 throw new FieldAccessException("У вас недостаточно прав, для добавления пользователя с правами администратора.");
 
-            if (Regex.IsMatch(Name, ":") || Regex.IsMatch(Password, ":"))
-                throw new ArgumentException("В имени и пароле пользователей не должны присутствовать знаки: {:}");
+            string BadSymbols = ":";
+
+            if (Regex.IsMatch(Name, $"[{BadSymbols}]") || Regex.IsMatch(Password, $"[{BadSymbols}]"))
+                throw new ArgumentException($"В имени и пароле пользователей не должны присутствовать знаки: {BadSymbols}");
 
             //Добавь проверку на пользователя
             var UsersData = this.UsersData;
@@ -106,19 +108,8 @@ namespace FileSystem_CurseWork_OS
             if (UsersData.Length >= ushort.MaxValue) 
                 throw new Exception("В системе присутствует максимальное количество пользователей!");
 
-            if(UsersData.Where(x => Regex.IsMatch(x, @$"^{Name}")).Count() > 0)
+            if(UsersData.Where(x => Regex.IsMatch(x, @$"^{Name}:")).Count() > 0)
                 throw new ArgumentException("Пользователь уже существует!");
-
-            //var NewUsersData = new string[UsersData.Length + 1];
-
-            //UsersData.CopyTo(NewUsersData, UsersData.Length - 1);
-
-            //if(ForAdmin)
-            //    NewUsersData[NewUsersData.Length - 1] = $"{Name}:{Password}:1";
-            //else
-            //    NewUsersData[NewUsersData.Length - 1] = $"{Name}:{Password}:0";
-
-            //fs.WriteStringInFile(UserFile, string.Join('\n', NewUsersData), false);
 
             var NewUser = string.Empty;
 
@@ -282,19 +273,9 @@ namespace FileSystem_CurseWork_OS
             UsersData[NumberUserToDelete] = string.Empty;
             fs.DeleteFilesBelongingUser(NumberUserToDelete);
 
-            //for (ushort i = 0; i < UsersData.Length; i++)
-            //{
-            //    if (Regex.IsMatch(UsersData[i], @$"^{NameUser}"))
-            //    {
-            //        fs.DeleteFilesBelongingUser(i);
-            //        UsersData[i] = string.Empty;
-            //        break;
-            //    }
-            //}
+            //UsersData = UsersData.Where(x => x.Length > 0).Select(x => x + "\n").ToArray();
 
-            UsersData = UsersData.Where(x => x.Length > 0).Select(x => x + "\n").ToArray();
-
-            fs.WriteStringInFile(UserFile, string.Join("", UsersData), false);
+            fs.WriteStringInFile(UserFile, string.Join("\n", UsersData), false);
         }
 
         public string[] GetAllUsers()
@@ -302,7 +283,7 @@ namespace FileSystem_CurseWork_OS
             if (!Admin)
                 throw new FieldAccessException("У вас нет прав просматривать список пользователей!");
 
-            return UsersData;
+            return UsersData.Where(x => x.Length > 0).ToArray();
         }
 
         private void Checking_Access_OnlyAdmin_CurrentUserToFile(string Name)

@@ -135,7 +135,7 @@ class Program
                         break;
 
                     case "users":
-                        Console.Write(string.Join('\n', os.GetAllUsers()));
+                        Console.WriteLine(string.Join('\n', os.GetAllUsers()));
                         break;
 
                     case "clear":
@@ -158,6 +158,7 @@ class Program
                             "userdel\t<username>\tУдаляет пользователя с указанным именем <username>.\n" +
                             "login\t<username> <passowrd>\tВход в систему под указанным именем пользователя <username> с использованием пароля <passowrd>.\n" +
                             "logout\t-\tВыход из системы.\n" +
+                            "formatting\t-\tФорматирует диск.\n" +
                             "users\t-\tОтображает всех существующих пользователей в системе\n" +
                             "clear\t-\tОчистить консоль\n"
                             );
